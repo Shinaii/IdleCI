@@ -1,0 +1,41 @@
+{
+    "name": "idleon-injector-rebuild",
+    "version": "2.0.0-TS-Rework",
+    "main": "dist/main.js",
+    "scripts": {
+        "build-tsc": "tsc",
+        "build-windows": "npm run build-tsc && pkg dist/main.js --targets node18-win-x64 --output build/IdleCI-windows-x64",
+        "build-linux": "npm run build-tsc && pkg dist/main.js --targets node18-linux-x64 --output build/IdleCI-linux-x64",
+        "start": "node dist/main.js",
+        "dev": "ts-node src/main.ts"
+    },
+    "dependencies": {
+        "@types/commander": "^2.12.0",
+        "@types/winston": "^2.4.4",
+        "@types/yargs": "^17.0.33",
+        "atob": "^2.1.2",
+        "btoa": "^1.2.1",
+        "child_process": "^1.0.2",
+        "chrome-remote-interface": "^0.33.0",
+        "commander": "^14.0.0",
+        "data-store": "^3.1.0",
+        "enquirer": "^2.3.6",
+        "express": "^5.1.0",
+        "lodash": "^4.17.21",
+        "prompt": "^1.3.0",
+        "winston": "^3.17.0"
+    },
+    "devDependencies": {
+        "@types/chrome-remote-interface": "^0.31.14",
+        "@types/express": "^4.17.21",
+        "@types/node": "^20.19.8",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.2.2"
+    },
+    "pkg": {
+        "assets": [
+            "src/cheats/cheats.js",
+            "src/config/config.custom.example.js"
+        ]
+    }
+}
