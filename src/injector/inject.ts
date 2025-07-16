@@ -6,6 +6,7 @@ import btoa from 'btoa';
 import { getLogger } from '../lib/logger';
 import { CheatConfig } from '../types';
 import { connectToCDP } from './cdp';
+import { initializeCheatContext } from '../util/helper';
 
 /**
  * Injects cheats into the game context using CDP.
@@ -67,7 +68,10 @@ export async function injectCheats(
   await client.Runtime.evaluate({ expression: cheats });
   logger.info('Loaded cheats...');
 
-  logger.debug('Registering Network.requestIntercepted handler');
+  // Create a promise that resolves after the first injection
+  let injectionDoneResolve: (() => void) | null = null;
+  const injectionDone = new Promise<void>(resolve => { injectionDoneResolve = resolve; });
+
   client.Network.requestIntercepted(async ({ interceptionId, request }: any) => {
     logger.debug('requestIntercepted event fired', { interceptionId, url: request.url });
     try {
@@ -137,5 +141,7 @@ export async function injectCheats(
   });
   logger.info('Interception listener setup complete.');
   logger.debug('Reloading page to ensure interception is active for all requests...');
-  await client.Page.reload({ ignoreCache: true }); //THIS IS SO FUCKING IMPORTANT!!! Else we will miss the request all the time.
+  await client.Page.reload({ ignoreCache: true });
+  // Wait for the first successful injection before returning
+  await injectionDone;
 } 

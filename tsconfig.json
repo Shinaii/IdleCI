@@ -11,6 +11,6 @@
       "lib": ["es2015", "es2020", "dom"],
       "types": ["node"]
     },
-    "include": ["src/**/*"]
+    "include": ["src/**/*", "build/cheats.js"]
   }
   

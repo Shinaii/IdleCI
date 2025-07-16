@@ -9,7 +9,7 @@ import { FullConfig } from '../types';
  * @param config The full merged config object
  * @param logLevel The log level to use for logging
  */
-export async function runInjector(config: FullConfig, logLevel: string = 'info') {
+export async function runInjector(config: FullConfig, logLevel: string = 'info'): Promise<Awaited<ReturnType<typeof connectToCDP>>> {
   const logger = getLogger('Injector', logLevel);
   try {
     logger.debug(`Injector config: ${JSON.stringify(config.injectorConfig)}`);
@@ -21,6 +21,9 @@ export async function runInjector(config: FullConfig, logLevel: string = 'info')
     logger.info('Connected to Chrome DevTools Protocol.');
 
     await injectCheats(client, config.cheatConfig, config.startupCheats, config.injectorConfig, logLevel);
+
+    return client;
+
   } catch (err) {
     logger.error(`Injector error: ${err}`);
     throw err;
