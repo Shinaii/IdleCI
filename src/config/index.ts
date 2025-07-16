@@ -34,7 +34,7 @@ export async function loadConfig(customConfigPath?: string): Promise<FullConfig>
 
 /**
  * (Stub) Validates the config object. Throws if invalid.
- * TODO: Implement schema validation.
+ * TODO: Implement schema validation. (More like testing)
  */
 function validateConfig(config: FullConfig): void {
   // Validate startupCheats
@@ -55,7 +55,7 @@ function validateConfig(config: FullConfig): void {
     ['injreg', 'string'],
     ['showConsoleLog', 'boolean'],
     ['chrome', 'string'],
-    ['onLinuxTimeout', 'number'],
+    ['onTimeout', 'number'],
     ['interceptPattern', 'string'],
   ];
   for (const [field, type] of requiredFields) {
@@ -67,7 +67,7 @@ function validateConfig(config: FullConfig): void {
       throw new Error(`Config validation error: injectorConfig field '${field}' must be of type ${type}`);
     }
   }
-  // Optional: gameExePath can be undefined or string
+  //gameExePath can be undefined or string (Steamprotocol)
   if ('gameExePath' in inj && inj.gameExePath !== undefined && typeof inj.gameExePath !== 'string') {
     throw new Error('Config validation error: injectorConfig.gameExePath must be a string if defined');
   }

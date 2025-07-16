@@ -199,7 +199,7 @@ export const defaultConfig: FullConfig = {
     injreg: '\\w+\\.ApplicationMain\\s*?=',
     showConsoleLog: false,
     chrome: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    onLinuxTimeout: 30000,
+    onTimeout: 30000,
     interceptPattern: '*N.js',
     gameExePath: undefined,
   },

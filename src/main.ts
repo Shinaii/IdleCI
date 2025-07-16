@@ -22,7 +22,6 @@ const webLogger = getLogger('WebUI', logLevel);
 
 async function main() {
   try {
-    //Startup with Logo and Version
     const logo = `\x1b[36m
   _____    _ _       _____         _____ _                _     _____      _           _             
  |_   _|  | | |     |  _  |       /  __ \\ |              | |   |_   _|    (_)         | |            

@@ -14,12 +14,13 @@ export async function runInjector(config: FullConfig, logLevel: string = 'info')
   try {
     logger.debug(`Injector config: ${JSON.stringify(config.injectorConfig)}`);
 
-    const wsUrl = await autoAttach();
+    const wsUrl = await autoAttach(config.injectorConfig);
     logger.info('Attached to game. WebSocket URL:', wsUrl);
 
     const client = await connectToCDP(wsUrl);
     logger.info('Connected to Chrome DevTools Protocol.');
 
+    //TODO: Inject cheats
     //await injectCheats(client, config.cheatConfig);
   } catch (err) {
     logger.error(`Injector error: ${err}`);
