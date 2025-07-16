@@ -6,7 +6,11 @@ import CDP from 'chrome-remote-interface';
  * @returns The CDP client
  */
 export async function connectToCDP(wsUrl: string): Promise<any> {
-  // The 'target' option can be a WebSocket URL
-  const client = await CDP({ target: wsUrl });
+  
+  const cdpOptions = {
+    tab: wsUrl,
+    port: 32123
+  }
+  const client = await CDP(cdpOptions);
   return client;
 } 

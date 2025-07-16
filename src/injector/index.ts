@@ -1,5 +1,5 @@
 import { autoAttach } from './attach';
-import { injectCheats } from './cheats';
+import { injectCheats } from './inject';
 import { connectToCDP } from './cdp';
 import { getLogger } from '../lib/logger';
 import { FullConfig } from '../types';
@@ -20,10 +20,9 @@ export async function runInjector(config: FullConfig, logLevel: string = 'info')
     const client = await connectToCDP(wsUrl);
     logger.info('Connected to Chrome DevTools Protocol.');
 
-    //TODO: Inject cheats
-    //await injectCheats(client, config.cheatConfig);
+    await injectCheats(client, config.cheatConfig, config.startupCheats, config.injectorConfig, logLevel);
   } catch (err) {
     logger.error(`Injector error: ${err}`);
     throw err;
   }
-} 
+}
