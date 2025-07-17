@@ -1,3 +1,5 @@
+import { getLogger } from "../lib/logger";
+
 export function printHeader(version: string) {
     const logo = `\x1b[36m
     _____    _ _       _____         _____ _                _     _____      _           _             
@@ -13,9 +15,11 @@ export function printHeader(version: string) {
     console.log(`      v${version}\n`);
   }
 
-export async function initializeCheatContext(Runtime: any, context: string, logger: any): Promise<boolean> {
-  logger.info('Initializing cheats ingame...');
-  const timeout = 20000; // ms
+export async function initializeCheatContext(Runtime: any, context: string, logLevel: string = 'info'): Promise<boolean> {
+  const logger = getLogger('Game', logLevel);
+  logger.info('Checking Cheat Context in Game...');
+  logger.warn('This might look like it\'s frozen, but it\'s just waiting for the game to load.');
+  const timeout = 30000; // ms
   const interval = 200; // ms
   const start = Date.now();
 

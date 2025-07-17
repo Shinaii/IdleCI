@@ -24,7 +24,7 @@ export async function injectCheats(
   logLevel: string = 'info'
 ): Promise<void> {
   const logger = getLogger('Injector', logLevel);
-  logger.info('Injecting cheats...');
+  logger.info('Setting up Injector...');
   logger.debug('injectCheats params:', { cheatConfig, startupCheats, config, logLevel });
 
   let cheats = await fs.readFile(path.join(process.cwd(), 'cheats.js'), 'utf8');
@@ -50,7 +50,6 @@ export async function injectCheats(
       },
     ],
   });
-  //debug pattern 
   logger.debug(`Interception Pattern: ${JSON.stringify(config.interceptPattern)}`);
 
   logger.debug('Setting bypass CSP');
@@ -68,23 +67,19 @@ export async function injectCheats(
   await client.Runtime.evaluate({ expression: cheats });
   logger.info('Loaded cheats...');
 
-  // Create a promise that resolves after the first injection
-  // let injectionDoneResolve: (() => void) | null = null;
-  // const injectionDone = new Promise<void>(resolve => { injectionDoneResolve = resolve; });
-
   client.Network.requestIntercepted(async ({ interceptionId, request }: any) => {
-    logger.debug('requestIntercepted event fired', { interceptionId, url: request.url });
+    logger.debug(`requestIntercepted event fired: ${interceptionId}, ${request.url}`);
     try {
       logger.info(`Intercepted: ${request.url}`);
       logger.debug('Getting response body for interception');
       const response = await client.Network.getResponseBodyForInterception({ interceptionId });
-      logger.debug('Got response body', { responseLength: response.body.length });
+      logger.debug(`Got response body: ${response.body.length}`);
       const originalBody = atob(response.body);
-      logger.debug('Decoded original body', { originalBodySnippet: originalBody.slice(0, 200) });
+      logger.debug(`Decoded original body: ${originalBody.slice(0, 200)}`);
       const InjRegG = new RegExp(config.injreg, 'g');
       const VarName = new RegExp('^\\w+');
       const AppMain = InjRegG.exec(originalBody);
-      logger.debug('Regex exec result', { AppMain });
+      logger.debug(`Regex exec result: ${AppMain}`);
       if (!AppMain) {
         logger.error(`Injection regex '${config.injreg}' did not match the script content. Cannot inject.`);
         await client.Network.continueInterceptedRequest({ interceptionId });
@@ -95,9 +90,9 @@ export async function injectCheats(
         const match = VarName.exec(AppMain[i]);
         AppVar[i] = match ? match[0] : '';
       }
-      logger.debug('Extracted AppVar', { AppVar });
+      logger.debug(`Extracted AppVar: ${AppVar}`);
       let manipulatorResult = await client.Runtime.evaluate({ expression: 'getZJSManipulator()', awaitPromise: true });
-      logger.debug('Manipulator result', { manipulatorResult });
+      logger.debug(`Manipulator result: ${manipulatorResult}`);
       let newBody;
       if (manipulatorResult.result && manipulatorResult.result.type === 'string') {
         let manipulator = new Function('return ' + manipulatorResult.result.value)();
@@ -109,7 +104,7 @@ export async function injectCheats(
       }
       const replacementRegex = new RegExp(config.injreg);
       newBody = newBody.replace(replacementRegex, `window.__idleon_cheats__=${AppVar[0]};$&`);
-      logger.debug('Injected window.__idleon_cheats__', { newBodySnippet: newBody.slice(0, 200) });
+      logger.debug(`Injected window.__idleon_cheats__: ${newBody.slice(0, 200)}`);
       logger.info('Updated game code...');
       const newHeaders = [
         `Date: ${(new Date()).toUTCString()}`,
@@ -128,8 +123,7 @@ export async function injectCheats(
         interceptionId,
         rawResponse: newResponse,
       });
-      logger.info('Sent to game...');
-      logger.info('Cheat injected!');
+      logger.info('Sending Updated Script to Game...');
     } catch (error) {
       logger.error('Error during request interception:', error);
       try {
@@ -140,8 +134,4 @@ export async function injectCheats(
     }
   });
   logger.info('Interception listener setup complete.');
-  logger.debug('Reloading page to ensure interception is active for all requests...');
-  // await client.Page.reload({ ignoreCache: true });
-  // Wait for the first successful injection before returning
-  // await injectionDone;
 } 

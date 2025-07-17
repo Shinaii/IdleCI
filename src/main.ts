@@ -34,24 +34,14 @@ async function main() {
     logger.info('Attaching to game...');
     const client = await runInjector(config, logLevel);
 
-
-    // Create web server instance
-    // let webServer: WebServerService | null = null;
-    // if (config.injectorConfig.enableUI) {
-    //   webServer = new WebServerService(config.injectorConfig);
-    // }
-
     // Listen for page load event
     client.Page.loadEventFired(async () => {
       logger.info('Page load event fired.');
       // Wait for cheat context to be available and setup
       const contextVar = "window.document.querySelector('iframe').contentWindow.__idleon_cheats__";
-      const cheatInitialized = await initializeCheatContext(client.Runtime, contextVar, logger);
+      const cheatInitialized = await initializeCheatContext(client.Runtime, contextVar, logLevel);
       if (!cheatInitialized) return;
 
-      // if (config.injectorConfig.enableUI) {
-      //   webServer!.start();
-      // }
     });
   } catch (err) {
     logger.error(`Fatal error: ${err}`);
