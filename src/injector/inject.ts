@@ -69,8 +69,8 @@ export async function injectCheats(
   logger.info('Loaded cheats...');
 
   // Create a promise that resolves after the first injection
-  let injectionDoneResolve: (() => void) | null = null;
-  const injectionDone = new Promise<void>(resolve => { injectionDoneResolve = resolve; });
+  // let injectionDoneResolve: (() => void) | null = null;
+  // const injectionDone = new Promise<void>(resolve => { injectionDoneResolve = resolve; });
 
   client.Network.requestIntercepted(async ({ interceptionId, request }: any) => {
     logger.debug('requestIntercepted event fired', { interceptionId, url: request.url });
@@ -141,7 +141,7 @@ export async function injectCheats(
   });
   logger.info('Interception listener setup complete.');
   logger.debug('Reloading page to ensure interception is active for all requests...');
-  await client.Page.reload({ ignoreCache: true });
+  // await client.Page.reload({ ignoreCache: true });
   // Wait for the first successful injection before returning
-  await injectionDone;
+  // await injectionDone;
 } 

@@ -36,10 +36,10 @@ async function main() {
 
 
     // Create web server instance
-    let webServer: WebServerService | null = null;
-    if (config.injectorConfig.enableUI) {
-      webServer = new WebServerService(config.injectorConfig);
-    }
+    // let webServer: WebServerService | null = null;
+    // if (config.injectorConfig.enableUI) {
+    //   webServer = new WebServerService(config.injectorConfig);
+    // }
 
     // Listen for page load event
     client.Page.loadEventFired(async () => {
@@ -49,9 +49,9 @@ async function main() {
       const cheatInitialized = await initializeCheatContext(client.Runtime, contextVar, logger);
       if (!cheatInitialized) return;
 
-      if (config.injectorConfig.enableUI) {
-        webServer!.start();
-      }
+      // if (config.injectorConfig.enableUI) {
+      //   webServer!.start();
+      // }
     });
   } catch (err) {
     logger.error(`Fatal error: ${err}`);

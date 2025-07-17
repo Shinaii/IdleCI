@@ -15,7 +15,7 @@ export function printHeader(version: string) {
 
 export async function initializeCheatContext(Runtime: any, context: string, logger: any): Promise<boolean> {
   logger.info('Initializing cheats ingame...');
-  const timeout = 5000; // ms
+  const timeout = 20000; // ms
   const interval = 200; // ms
   const start = Date.now();
 
