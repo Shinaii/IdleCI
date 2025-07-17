@@ -1,0 +1,70 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published, prereleased]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm install
+      - name: Build binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npm run build-windows
+      - name: Build binary (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run build-linux
+      - name: Copy cheats and config
+        run: |
+          mkdir -p build
+          cp src/cheats/cheats.js build/cheats.js || echo "cheats.js not found"
+          cp src/config/config.custom.example.js build/config.custom.example.js || echo "config.custom.example.js not found"
+        shell: bash
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: IdleCI-${{ matrix.os }}
+          path: |
+            build/IdleCI-*
+            build/cheats.js
+            build/config.custom.example.js
+
+  release:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: IdleCI-windows-latest
+          path: build/windows
+      - uses: actions/download-artifact@v3
+        with:
+          name: IdleCI-ubuntu-latest
+          path: build/linux
+      - name: Upload Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/windows/IdleCI-windows-x64.exe
+            build/windows/cheats.js
+            build/windows/config.custom.example.js
+            build/linux/IdleCI-linux-x64
+            build/linux/cheats.js
+            build/linux/config.custom.example.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
