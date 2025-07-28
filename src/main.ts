@@ -82,19 +82,36 @@ async function main() {
       
       logger.debug('Cheat context initialization completed successfully');
 
-      // Start CLI interface if enabled
+      // Start web UI if enabled
+      if (config.injectorConfig.enableUI) {
+        logger.debug('Starting web UI server...');
+        const webServer = new WebServerService(
+          config.injectorConfig,
+          contextVar,
+          client,
+          config.cheatConfig,
+          config.startupCheats,
+          version
+        );
+        webServer.start();
+        logger.debug('Web UI server started successfully');
+      }
+
+      // Start CLI interface if enabled (after web UI)
       if (enableCli) {
         logger.debug('Starting CLI interface...');
         try {
-          await startCliInterface(
-            contextVar,
-            client,
-            {
-              injectorConfig: config.injectorConfig,
-              cdpPort: 32123
-            },
-            logLevel
-          );
+          // Add a small delay to ensure web UI is ready before CLI starts
+          setTimeout(async () => {
+            await startCliInterface(
+              contextVar,
+              client,
+              {
+                injectorConfig: config.injectorConfig,
+                cdpPort: 32123
+              }
+            );
+          }, 1500); // 1.5 seconds delay to ensure web UI is ready
         } catch (cliError) {
           logger.error(`CLI interface error: ${cliError}`);
           console.error('CLI interface failed:', cliError);

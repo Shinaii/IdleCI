@@ -382,7 +382,7 @@ html, body {
 }
 .footer-credits {
     display: block;
-    color: var(--color-border);
+    color: var(--color-accent);
     font-size: 0.98em;
     margin-top: 6px;
 }

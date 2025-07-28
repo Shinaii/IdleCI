@@ -881,4 +881,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial Load ---
     loadAndRenderCheats(); // Load cheats immediately (default tab)
     // Config tab content will load when the tab is clicked.
+    
+    // Load version dynamically
+    loadVersion();
 });
+
+// Function to load version from API
+async function loadVersion() {
+    try {
+        const response = await fetch('/api/version');
+        if (response.ok) {
+            const data = await response.json();
+            const versionBadge = document.getElementById('version-badge');
+            if (versionBadge) {
+                versionBadge.textContent = `v${data.version}`;
+            }
+        } else {
+            console.error('Failed to load version:', response.status);
+            const versionBadge = document.getElementById('version-badge');
+            if (versionBadge) {
+                versionBadge.textContent = 'v?';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading version:', error);
+        const versionBadge = document.getElementById('version-badge');
+        if (versionBadge) {
+            versionBadge.textContent = 'v?';
+        }
+    }
+}
