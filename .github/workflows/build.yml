@@ -15,47 +15,65 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+        
       - name: Build binary (Windows)
         if: matrix.os == 'windows-latest'
-        run: npm run build-windows
+        run: npm run build:windows
+        
       - name: Build binary (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: npm run build-linux
+        run: npm run build:linux
+        
       - name: Copy cheats and config
         run: |
           mkdir -p build
-          cp src/cheats/cheats.js build/cheats.js || echo "cheats.js not found"
+          cp cheats.js build/cheats.js || echo "cheats.js not found"
           cp src/config/config.custom.example.js build/config.custom.example.js || echo "config.custom.example.js not found"
         shell: bash
+        
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: IdleCI-${{ matrix.os }}
           path: |
             build/IdleCI-*
             build/cheats.js
             build/config.custom.example.js
+          retention-days: 30
 
   release:
     needs: build
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
         with:
           name: IdleCI-windows-latest
           path: build/windows
-      - uses: actions/download-artifact@v3
+          
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
         with:
           name: IdleCI-ubuntu-latest
           path: build/linux
+          
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
