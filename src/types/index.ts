@@ -22,13 +22,17 @@ export interface InjectorConfig {
   interceptPattern: string;
   gameExePath?: string;
   customUIPort: number;
-  // OPTIMIZATION: Add fast injection mode and performance tuning options
+  // Performance optimization options
   fastInjectionMode?: boolean;
   cdpConnectionTimeout?: number;
   cdpRetryAttempts?: number;
   pollingInterval?: number;
   cheatContextTimeout?: number;
   cheatContextPollingInterval?: number;
+  // CLI interface options
+  enableCli?: boolean;
+  cliAutocomplete?: boolean;
+  cliConfirmationPrompts?: boolean;
 }
 
 /**
