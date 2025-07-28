@@ -1,14 +1,18 @@
 {
     "name": "idleon-injector-rebuild",
-    "version": "2.0.0-TS-Rework",
+    "version": "1.0.0-Legacy-TS",
     "main": "dist/main.js",
     "scripts": {
-        "build-tsc": "tsc",
-        "build-windows": "npm run build-tsc && pkg dist/main.js --targets node18-win-x64 --output build/IdleCI-windows-x64",
-        "build-linux": "npm run build-tsc && pkg dist/main.js --targets node18-linux-x64 --output build/IdleCI-linux-x64",
+        "clean": "rimraf dist",
+        "build:tsc": "npm run clean && tsc",
+        "copy:ui": "copyfiles -u 1 src/web/ui/**/* dist/web/",
+        "build": "npm run build:tsc && npm run copy:ui",
+        "build:windows": "npm run build && pkg dist/main.js --targets node18-win-x64 --output build/IdleCI-windows-x64",
+        "build:linux": "npm run build && pkg dist/main.js --targets node18-linux-x64 --output build/IdleCI-linux-x64",
         "start": "node dist/main.js",
         "dev": "ts-node src/main.ts -d",
-        "bun:dev": "bun run src/main.ts -d"
+        "bun:dev": "bun run src/main.ts -d",
+        "bun:start": "bun run src/main.ts"
     },
     "dependencies": {
         "@types/commander": "^2.12.0",
@@ -35,13 +39,16 @@
         "@types/lodash": "^4.17.20",
         "@types/node": "^20.19.8",
         "@types/readline-sync": "^1.4.8",
+        "copyfiles": "^2.4.1",
+        "rimraf": "^5.0.10",
         "ts-node": "^10.9.1",
         "typescript": "^5.2.2"
     },
     "pkg": {
         "assets": [
-            "src/cheats/cheats.js",
-            "src/config/config.custom.example.js"
+            "cheats.js",
+            "src/config/config.custom.example.js",
+            "dist/web/ui/**/*"
         ]
     }
 }
