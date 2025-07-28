@@ -89,15 +89,24 @@ jobs:
           name: IdleCI-ubuntu-latest
           path: build/linux
           
+      - name: Create release packages
+        run: |
+          # Create Windows package
+          cd build/windows
+          zip -r ../../IdleCI-Windows-x64.zip IdleCI-windows-x64.exe cheats.js config.custom.example.js
+          cd ../..
+          
+          # Create Linux package
+          cd build/linux
+          zip -r ../../IdleCI-Linux-x64.zip IdleCI-linux-x64 cheats.js config.custom.example.js
+          cd ../..
+          
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            build/windows/IdleCI-windows-x64.exe
-            build/windows/cheats.js
-            build/windows/config.custom.example.js
-            build/linux/IdleCI-linux-x64
-            build/linux/cheats.js
-            build/linux/config.custom.example.js
+            IdleCI-Windows-x64.zip
+            IdleCI-Linux-x64.zip
+          tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
