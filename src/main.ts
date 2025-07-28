@@ -22,27 +22,52 @@ const logger = getLogger('Idle CI', logLevel);
 
 async function main() {
   try {
-    // Print header
+    logger.debug('Starting IdleCI application...');
+    logger.debug(`Command line options: ${JSON.stringify(options)}`);
+    logger.debug(`Log level: ${logLevel}`);
+    logger.debug(`Custom config path: ${customConfigPath}`);
+
     const version = require('../package.json').version;
     printHeader(version);
 
     logger.info('Loading config...');
+    logger.debug(`Loading config from path: ${customConfigPath}`);
     const config = await loadConfig(customConfigPath);
     logger.info('Config loaded.');
+    logger.debug(`Loaded config: ${JSON.stringify(config)}`);
 
-    
     logger.info('Attaching to game...');
+    logger.debug(`Starting injector with config: ${JSON.stringify(config)}`);
     const client = await runInjector(config, logLevel);
+    logger.debug('Injector completed successfully');
 
-    // Listen for page load event
+    logger.debug('Setting up page load event listener...');
     client.Page.loadEventFired(async () => {
       logger.info('Page load event fired.');
-      // Wait for cheat context to be available and setup
+      logger.debug('Page load event triggered, initializing cheat context...');
+      
       const contextVar = "window.document.querySelector('iframe').contentWindow.__idleon_cheats__";
-      const cheatInitialized = await initializeCheatContext(client.Runtime, contextVar, logLevel);
-      if (!cheatInitialized) return;
-
+      logger.debug(`Cheat context variable: ${contextVar}`);
+      logger.debug(`Cheat context timeout: ${config.injectorConfig.cheatContextTimeout}`);
+      logger.debug(`Cheat context polling interval: ${config.injectorConfig.cheatContextPollingInterval}`);
+      
+      const cheatInitialized = await initializeCheatContext(
+        client.Runtime, 
+        contextVar, 
+        logLevel,
+        config.injectorConfig.cheatContextTimeout,
+        config.injectorConfig.cheatContextPollingInterval
+      );
+      
+      if (!cheatInitialized) {
+        logger.error('Cheat context initialization failed');
+        return;
+      }
+      
+      logger.debug('Cheat context initialization completed successfully');
     });
+    
+    logger.debug('Main application setup completed');
   } catch (err) {
     logger.error(`Fatal error: ${err}`);
     process.exit(1);

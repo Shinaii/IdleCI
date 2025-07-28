@@ -15,29 +15,61 @@ export function printHeader(version: string) {
     console.log(`      v${version}\n`);
   }
 
-export async function initializeCheatContext(Runtime: any, context: string, logLevel: string = 'info'): Promise<boolean> {
+export async function initializeCheatContext(
+  Runtime: any, 
+  context: string, 
+  logLevel: string = 'info',
+  timeout?: number,
+  pollingInterval?: number
+): Promise<boolean> {
   const logger = getLogger('Game', logLevel);
   logger.info('Checking Cheat Context in Game...');
   logger.warn('This might look like it\'s frozen, but it\'s just waiting for the game to load.');
-  const timeout = 30000; // ms
-  const interval = 200; // ms
+  
+  const finalTimeout = timeout || 30000;
+  const finalInterval = pollingInterval || 100;
   const start = Date.now();
+  
+  logger.debug(`Cheat context initialization parameters: ${JSON.stringify({
+    context,
+    timeout: finalTimeout,
+    pollingInterval: finalInterval,
+    logLevel
+  })}`);
 
-  while (Date.now() - start < timeout) {
-    const contextExists = await Runtime.evaluate({ expression: `!!${context}` });
-    if (contextExists.result.value) {
-      // Execute the setup function from cheats.js within the game's context
-      const init = await Runtime.evaluate({
-        expression: `setup.call(${context})`,
-        awaitPromise: true,
-        allowUnsafeEvalBlockedByCSP: true
-      });
-      logger.info(`Cheat setup result: ${init.result.value}`);
-      return true;
+  while (Date.now() - start < finalTimeout) {
+    const elapsed = Date.now() - start;
+    logger.debug(`Checking cheat context (elapsed: ${elapsed}ms)...`);
+    
+    try {
+      logger.debug(`Evaluating context expression: ${context}`);
+      const contextExists = await Runtime.evaluate({ expression: `!!${context}` });
+      logger.debug(`Context evaluation result: ${JSON.stringify(contextExists)}`);
+      
+      if (contextExists.result.value) {
+        logger.debug('Cheat context found! Setting up cheats...');
+        
+        logger.debug('Evaluating setup.call() in game context...');
+        const init = await Runtime.evaluate({
+          expression: `setup.call(${context})`,
+          awaitPromise: true,
+          allowUnsafeEvalBlockedByCSP: true
+        });
+        logger.debug(`Setup call result: ${JSON.stringify(init)}`);
+        logger.info(`Cheat setup result: ${init.result.value}`);
+        return true;
+      } else {
+        logger.debug('Cheat context not found yet, will retry...');
+      }
+    } catch (error) {
+      logger.debug(`Context evaluation failed, retrying... (${error})`);
     }
-    await new Promise(res => setTimeout(res, interval));
+    
+    logger.debug(`Waiting ${finalInterval}ms before next check...`);
+    await new Promise(res => setTimeout(res, finalInterval));
   }
 
-  logger.error('Cheat context not found in iframe after waiting. Injection might have failed.');
+  const totalElapsed = Date.now() - start;
+  logger.error(`Cheat context not found in iframe after ${totalElapsed}ms. Injection might have failed.`);
   return false;
 }
