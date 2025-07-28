@@ -21,11 +21,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           
       - name: Install dependencies
         run: npm ci
+        
+      - name: Install pkg globally
+        run: npm install -g pkg@latest
+        
+      - name: Verify pkg installation
+        run: pkg --version
         
       - name: Build binary (Windows)
         if: matrix.os == 'windows-latest'
@@ -35,11 +41,20 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: npm run build:linux
         
-      - name: Copy cheats and config
+      - name: Copy cheats and config (Windows)
+        if: matrix.os == 'windows-latest'
         run: |
           mkdir -p build
-          cp cheats.js build/cheats.js || echo "cheats.js not found"
-          cp src/config/config.custom.example.js build/config.custom.example.js || echo "config.custom.example.js not found"
+          copy cheats.js build\cheats.js
+          copy "src\config\config.custom.example.js" "build\config.custom.example.js"
+        shell: cmd
+        
+      - name: Copy cheats and config (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p build
+          cp cheats.js build/cheats.js
+          cp src/config/config.custom.example.js build/config.custom.example.js
         shell: bash
         
       - name: Upload build artifacts
