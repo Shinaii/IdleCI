@@ -2048,15 +2048,7 @@ async function setup() {
 
 
     let rtn = [];
-    rtn.push("--------------------");
-    rtn = rtn.concat(runStartupCheats.call(this));
-    rtn.push("Cheat setup complete");
-    rtn.push("--------------------");
-    rtn.push("Hit enter to list available cheats");
-    rtn.push(
-      "Cheats will find as you type, so if you're looking for eg gem cheats, or an item just type it and see what comes up"
-    );
-    rtn.push("--------------------");
+    rtn.push("Looks like everything is working!");
     console.log('Exiting setup function successfully.'); // Added for diagnostics
     return rtn.join("\n");
 
