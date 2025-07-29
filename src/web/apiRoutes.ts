@@ -336,7 +336,7 @@ export function setupApiRoutes(
       // 1. Extract parts from UI payload
       const uiCheatConfigRaw = receivedFullConfig.cheatConfig;
       const uiStartupCheats = receivedFullConfig.startupCheats;
-      const new_injectorConfig = objToString(injectorConfig).replace(/\\/g, "\\\\");
+      const new_injectorConfig = objToString(injectorConfig);
 
       // 2. Parse UI cheatConfig to handle functions for saving
       const parsedUiCheatConfig = parseConfigFromJson(uiCheatConfigRaw);

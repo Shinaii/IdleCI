@@ -2050,6 +2050,17 @@ async function setup() {
     let rtn = [];
     rtn.push("Looks like everything is working!");
     console.log('Exiting setup function successfully.'); // Added for diagnostics
+    
+    // Run startup cheats after setup is complete
+    console.log('Running startup cheats...');
+    const startupResults = runStartupCheats();
+    if (startupResults.length > 0) {
+      rtn.push(`Executed ${startupResults.length} startup cheats:`);
+      rtn.push(...startupResults);
+    } else {
+      rtn.push("No startup cheats to execute.");
+    }
+    
     return rtn.join("\n");
 
   } catch (setupError) { // Added catch block

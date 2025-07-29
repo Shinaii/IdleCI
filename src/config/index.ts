@@ -1,7 +1,31 @@
 import path from 'path';
 import { existsSync } from 'fs';
+import _ from 'lodash';
 import { FullConfig } from '../types';
 import { defaultConfig } from './defaultConfig';
+
+// Helper function to normalize functions to our serialization format
+function normalizeConfig(config: any): any {
+  if (typeof config === 'function') {
+    // Convert actual functions to our special format
+    return { __isFunction: true, __functionString: config.toString() };
+  }
+  if (Array.isArray(config)) {
+    return config.map(normalizeConfig);
+  }
+  if (config && typeof config === 'object') {
+    // Don't process objects that are already our special function format
+    if (config.__isFunction && config.__functionString) {
+      return config;
+    }
+    const normalized: any = {};
+    for (const [key, value] of Object.entries(config)) {
+      normalized[key] = normalizeConfig(value);
+    }
+    return normalized;
+  }
+  return config;
+}
 
 /**
  * Loads the default config, and merges with a custom config if provided.
@@ -21,12 +45,15 @@ export async function loadConfig(customConfigPath?: string): Promise<FullConfig>
     }
   }
 
-  // Merge logic: custom overrides default
-  const merged: FullConfig = {
-    startupCheats: customConfig.startupCheats || defaultConfig.startupCheats || [],
-    cheatConfig: { ...defaultConfig.cheatConfig, ...customConfig.cheatConfig },
-    injectorConfig: { ...defaultConfig.injectorConfig, ...customConfig.injectorConfig },
-  };
+  // Normalize custom config to handle actual functions
+  const normalizedCustomConfig = normalizeConfig(customConfig);
+  
+  // Deep merge logic: custom overrides default
+  const merged: FullConfig = _.merge(
+    {},
+    defaultConfig,
+    normalizedCustomConfig
+  );
 
   validateConfig(merged);
   return merged;
