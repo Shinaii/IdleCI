@@ -12,6 +12,9 @@ import path from 'path';
 import { Express } from 'express';
 import { getLogger } from '../lib/logger';
 
+// Create dedicated logger for terminal operations
+const terminalLogger = getLogger('WebUI Terminal');
+
 // Helper functions for config handling
 function objToString(obj: any, indent: number = 0): string {
   const indentStr = '  '.repeat(indent);
@@ -106,7 +109,8 @@ export function setupApiRoutes(
   client: any, 
   config: ApiConfig
 ): void {
-  const logger = getLogger('API Routes');
+  const logger = getLogger('WebUI');
+  const terminalLogger = getLogger('WebUI Terminal');
   const { Runtime } = client;
   const { cheatConfig, startupCheats, injectorConfig, cdpPort, version } = config;
 
@@ -161,7 +165,7 @@ export function setupApiRoutes(
           details: cheatResponse.exceptionDetails.text 
         });
       } else {
-        logger.info(`[Web UI] Executed: ${action} -> ${cheatResponse.result.value}`);
+        logger.info(`Executed: ${action} -> ${cheatResponse.result.value}`);
         res.json({ result: cheatResponse.result.value });
       }
     } catch (apiError) {
@@ -206,7 +210,7 @@ export function setupApiRoutes(
         // Construct the DevTools URL
         // Note: Using http, not ws, for the main URL. The ws part is a parameter.
         const devtoolsUrl = `http://localhost:${cdpPort}/devtools/inspector.html?ws=localhost:${cdpPort}/devtools/page/${targetId}`;
-        logger.info(`[Web UI] Generated DevTools URL: ${devtoolsUrl}`);
+        logger.info(`Generated DevTools URL: ${devtoolsUrl}`);
         res.json({ url: devtoolsUrl });
       } else {
         logger.error("API Error: Could not get target info to generate DevTools URL.");
@@ -259,9 +263,9 @@ export function setupApiRoutes(
         // Overwrite the existing array content while keeping the reference
         startupCheats.length = 0; // Clear existing items
         startupCheats.push(...receivedFullConfig.startupCheats); // Add new items
-        logger.info('[Web UI] Updated server-side startupCheats.');
+        logger.info('Updated server-side startupCheats.');
       } else {
-        logger.warn('[Web UI] Received startupCheats is not an array. Skipping update.');
+        logger.warn('Received startupCheats is not an array. Skipping update.');
       }
 
       // 4. Inject the updated *cheatConfig* into the game context
@@ -303,7 +307,7 @@ export function setupApiRoutes(
         });
       } else {
         gameUpdateDetails = updateResult.result.value;
-        logger.info(`[Web UI] In-game config update result: ${gameUpdateDetails}`);
+        logger.info(`In-game config update result: ${gameUpdateDetails}`);
         if (gameUpdateDetails.startsWith('Error:')) {
           return res.status(200).json({ 
             message: 'Configuration updated on server, but failed to apply in game.', 
@@ -356,7 +360,7 @@ exports.injectorConfig = ${new_injectorConfig}; // Use current injectorConfig
 
       // 5. Write to file
       await fs.writeFile(savePath, fileContentString.trim());
-      logger.info(`[Web UI] Configuration saved to ${savePath}`);
+      logger.info(`Configuration saved to ${savePath}`);
 
       // 6. Update in-memory variables AFTER successful save
       startupCheats.length = 0; // Clear existing
@@ -369,6 +373,128 @@ exports.injectorConfig = ${new_injectorConfig}; // Use current injectorConfig
       res.status(500).json({ 
         error: 'Internal server error while saving configuration file', 
         details: (apiError as Error).message 
+      });
+    }
+  });
+
+  // Terminal command execution endpoint
+  app.post('/api/terminal/execute', async (req, res) => {
+    try {
+      const { command } = req.body;
+      
+      if (!command || typeof command !== 'string') {
+        terminalLogger.warn(`Invalid command request: ${JSON.stringify(req.body)}`);
+        return res.status(400).json({
+          success: false,
+          error: 'Command is required'
+        });
+      }
+
+      terminalLogger.info(`Executing command: ${command}`);
+
+      // Handle special commands
+      if (command === 'help') {
+        const helpResponse = await client.Runtime.evaluate({
+          expression: `cheat.call(${context}, 'cheats')`,
+          awaitPromise: true,
+          allowUnsafeEvalBlockedByCSP: true
+        });
+
+        if (helpResponse.exceptionDetails) {
+          terminalLogger.error(`Help command failed: ${helpResponse.exceptionDetails.text}`);
+          return res.json({
+            success: false,
+            output: `Error getting help: ${helpResponse.exceptionDetails.text}`,
+            type: 'error'
+          });
+        }
+
+        terminalLogger.info(`Help command executed successfully`);
+        return res.json({
+          success: true,
+          output: helpResponse.result.value || 'Help command executed',
+          type: 'info'
+        });
+      }
+
+      if (command === 'clear') {
+        terminalLogger.info(`Clear command executed`);
+        return res.json({
+          success: true,
+          output: '',
+          type: 'clear'
+        });
+      }
+
+      // Execute the cheat command
+      const response = await client.Runtime.evaluate({
+        expression: `cheat.call(${context}, '${command}')`,
+        awaitPromise: true,
+        allowUnsafeEvalBlockedByCSP: true
+      });
+
+      if (response.exceptionDetails) {
+        terminalLogger.error(`Command "${command}" failed: ${response.exceptionDetails.text}`);
+        return res.json({
+          success: false,
+          output: `Error: ${response.exceptionDetails.text}`,
+          type: 'error'
+        });
+      }
+
+      terminalLogger.info(`Command "${command}" executed successfully - Result: ${response.result.value || 'No output'}`);
+      return res.json({
+        success: true,
+        output: response.result.value || 'Command executed successfully',
+        type: 'success'
+      });
+
+    } catch (error) {
+      terminalLogger.error(`API error: ${error}`);
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        output: `Terminal error: ${error}`,
+        type: 'error'
+      });
+    }
+  });
+
+  // Terminal autocomplete endpoint
+  app.get('/api/terminal/autocomplete', async (req, res) => {
+    try {
+      const response = await client.Runtime.evaluate({
+        expression: `Object.keys(${context}.cheats || {}).map(key => ({ name: key, description: key }))`,
+        awaitPromise: true,
+        allowUnsafeEvalBlockedByCSP: true
+      });
+
+      if (response.exceptionDetails) {
+        terminalLogger.error(`Autocomplete failed: ${response.exceptionDetails.text}`);
+        return res.json({
+          success: false,
+          suggestions: []
+        });
+      }
+
+      const suggestions = response.result.value || [];
+      // Add built-in commands
+      suggestions.push(
+        { name: 'help', description: 'Show available commands' },
+        { name: 'clear', description: 'Clear terminal output' },
+        { name: 'cheats', description: 'List all available cheats' }
+      );
+
+      return res.json({
+        success: true,
+        suggestions
+      });
+
+    } catch (error) {
+      terminalLogger.error(`Autocomplete error: ${error}`);
+      return res.json({
+        success: false,
+        suggestions: []
       });
     }
   });

@@ -4,16 +4,14 @@ import { WebServerService } from './web/server';
 import { runInjector } from './injector';
 import { injectCheats } from './injector/inject';
 import { getLogger } from './lib/logger';
-import { startCliInterface } from './cli';
 import { Command } from 'commander';
 import { UpdateChecker } from './util/updateChecker';
+
 
 const program = new Command();
 program
   .option('-d, --debug', 'Enable debug logging', false)
   .option('-c, --config <path>', 'Path to custom config file')
-  .option('--cli', 'Enable CLI interface (default)', true)
-  .option('--no-cli', 'Disable CLI interface', false)
   .allowUnknownOption(false)
   .helpOption(false)
   .version('');
@@ -22,8 +20,7 @@ const options = program.opts();
 const logLevel = options.debug ? 'debug' : 'info';
 const customConfigPath = options.config;
 
-// CLI logic - check command line first, then config
-const cliDisabledByCommandLine = process.argv.includes('--no-cli');
+
 
 const logger = getLogger('Idle CI', logLevel);
 
@@ -31,9 +28,7 @@ async function main() {
   try {
     logger.debug('Starting IdleCI application...');
     logger.debug(`Command line options: ${JSON.stringify(options)}`);
-    logger.debug(`Raw options.cli value: ${options.cli}`);
     logger.debug(`Process argv: ${JSON.stringify(process.argv)}`);
-    logger.debug(`CLI disabled by command line: ${cliDisabledByCommandLine}`);
     logger.debug(`Log level: ${logLevel}`);
     logger.debug(`Custom config path: ${customConfigPath}`);
 
@@ -57,12 +52,10 @@ async function main() {
     logger.info('Config loaded.');
     logger.debug(`Loaded config: ${JSON.stringify(config)}`);
 
-    // Determine if CLI should be enabled
-    const configCliEnabled = config.injectorConfig.enableCli !== false; // Default to true
-    const enableCli = !cliDisabledByCommandLine && configCliEnabled;
+    // CLI interface is now integrated into the WebUI Terminal
+    const enableCli = config.injectorConfig.enableCli !== false; // Default to true
     
-    logger.debug(`Config CLI enabled: ${configCliEnabled}`);
-    logger.debug(`Final CLI enabled: ${enableCli}`);
+    logger.debug(`CLI interface enabled: ${enableCli}`);
 
     logger.info('Attaching to game...');
     logger.debug(`Starting injector with config: ${JSON.stringify(config)}`);
@@ -109,30 +102,13 @@ async function main() {
         logger.debug('Web UI server started successfully');
       }
 
-      // Start CLI interface if enabled (after web UI)
+      // CLI interface is integrated into the WebUI Terminal
       if (enableCli) {
-        logger.debug('Starting CLI interface...');
-        try {
-          // Add a small delay to ensure web UI is ready before CLI starts
-          setTimeout(async () => {
-            await startCliInterface(
-              contextVar,
-              client,
-              {
-                injectorConfig: config.injectorConfig,
-                cdpPort: 32123
-              }
-            );
-          }, 1500); // 1.5 seconds delay to ensure web UI is ready
-        } catch (cliError) {
-          logger.error(`CLI interface error: ${cliError}`);
-          console.error('CLI interface failed:', cliError);
-        }
+        console.log('💻 CLI Terminal available in WebUI');
+        logger.info('CLI Terminal integrated into WebUI');
       } else {
-        logger.debug('CLI interface disabled, keeping application running...');
-        // Keep the application running even without CLI
-        console.log('Injection completed successfully. CLI interface is disabled.');
-        console.log('The application will continue running in the background.');
+        logger.debug('CLI Terminal disabled');
+        console.log('Injection completed successfully. CLI Terminal is disabled.');
       }
     });
     

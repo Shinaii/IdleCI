@@ -23,6 +23,7 @@
             <nav class="tab-container">
                 <button class="tab-button active" data-tab="cheats-tab">🎮 Cheats</button>
                 <button class="tab-button" data-tab="config-tab">⚙️ Config</button>
+                <button class="tab-button" data-tab="terminal-tab">💻 Terminal</button>
                 <button class="tab-button" data-tab="devtools-tab">🛠️ DevTools</button>
             </nav>
 
@@ -69,6 +70,22 @@
                     </div>
                 </div>
 
+                <!-- Terminal Tab -->
+                <div id="terminal-tab" class="tab-pane">
+                    <h2>CLI Terminal <span class="help-icon" title="Execute cheat commands directly in the web interface.">?</span></h2>
+                    <div class="terminal-container">
+                        <div id="terminal-output" class="terminal-output"></div>
+                        <div class="terminal-input-container">
+                            <span class="terminal-prompt">idleci> </span>
+                            <input type="text" id="terminal-input" class="terminal-input" placeholder="Type cheat commands here..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="terminal-controls">
+                        <button id="clear-terminal" class="terminal-control-btn">Clear</button>
+                        <button id="help-terminal" class="terminal-control-btn">Help</button>
+                    </div>
+                </div>
+
                 <!-- DevTools Tab -->
                 <div id="devtools-tab" class="tab-pane">
                     <h2>Embedded DevTools <span class="help-icon" title="Advanced: Inspect the game browser context.">?</span></h2>
@@ -84,6 +101,6 @@
             <span class="footer-credits">Credits: iBelg, Creater0822, valleymon, Disputate, Shinaii and contributors</span>
         </footer>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=terminal-update"></script>
 </body>
 </html>

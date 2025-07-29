@@ -1,3 +1,5 @@
+
+
 document.addEventListener('DOMContentLoaded', () => {
     // Tab Elements
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -24,6 +26,337 @@ document.addEventListener('DOMContentLoaded', () => {
     const devtoolsIframe = document.getElementById('devtools-iframe');
     const devtoolsMessage = document.getElementById('devtools-message');
 
+    // Terminal Tab Elements
+    const terminalOutput = document.getElementById('terminal-output');
+    const terminalInput = document.getElementById('terminal-input');
+    const clearTerminalBtn = document.getElementById('clear-terminal');
+    const helpTerminalBtn = document.getElementById('help-terminal');
+    
+    // Debug: Check if terminal elements are found
+    console.log('Terminal elements found:', {
+        terminalOutput: !!terminalOutput,
+        terminalInput: !!terminalInput,
+        clearTerminalBtn: !!clearTerminalBtn,
+        helpTerminalBtn: !!helpTerminalBtn
+    });
+
+    // --- Terminal Functions (declare before event listeners) ---
+
+    function addTerminalLine(text, type = 'info') {
+        if (!terminalOutput) {
+            console.error('Terminal output element not found!');
+            return;
+        }
+        
+        const line = document.createElement('div');
+        line.className = `terminal-line terminal-${type}`;
+        
+        if (type === 'command') {
+            line.textContent = `idleci> ${text}`;
+        } else {
+            line.textContent = text;
+        }
+        
+        terminalOutput.appendChild(line);
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+
+    function clearTerminal() {
+        terminalOutput.innerHTML = '';
+        addTerminalLine('Terminal cleared', 'info');
+    }
+
+    async function executeTerminalCommand(command) {
+        // Add command to output
+        addTerminalLine(command, 'command');
+        
+        // Add to history
+        if (command.trim() && terminalHistory[terminalHistory.length - 1] !== command) {
+            terminalHistory.push(command);
+        }
+        terminalHistoryIndex = terminalHistory.length;
+
+        try {
+            // Log to backend terminal before execution
+            console.log(`[WebUI Terminal] Executing command: ${command.trim()}`);
+            
+            const response = await fetch('/api/terminal/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ command: command.trim() })
+            });
+
+            const result = await response.json();
+
+            if (result.type === 'clear') {
+                clearTerminal();
+                console.log(`[WebUI Terminal] Terminal cleared`);
+                return;
+            }
+
+            if (result.success) {
+                addTerminalLine(result.output, result.type || 'success');
+                console.log(`[WebUI Terminal] Command executed successfully: ${command.trim()}`);
+            } else {
+                addTerminalLine(result.output || result.error, 'error');
+                console.log(`[WebUI Terminal] Command failed: ${command.trim()} - ${result.output || result.error}`);
+            }
+        } catch (error) {
+            addTerminalLine(`Network error: ${error.message}`, 'error');
+            console.error(`[WebUI Terminal] Network error for command "${command.trim()}": ${error.message}`);
+        }
+    }
+
+    async function loadTerminalSuggestions() {
+        try {
+            // Load from both terminal autocomplete and regular cheats API
+            const [terminalResponse, cheatsResponse] = await Promise.all([
+                fetch('/api/terminal/autocomplete'),
+                fetch('/api/cheats')
+            ]);
+            
+            const terminalResult = await terminalResponse.json();
+            const cheatsResult = await cheatsResponse.json();
+            
+            let suggestions = [];
+            
+            // Add built-in terminal commands
+            if (terminalResult.success) {
+                suggestions = [...terminalResult.suggestions];
+            }
+            
+            // Add all available cheats
+            if (cheatsResult && Array.isArray(cheatsResult)) {
+                const cheatSuggestions = cheatsResult.map(cheat => ({
+                    name: cheat.name,
+                    description: cheat.description || `Execute ${cheat.name} cheat`
+                }));
+                suggestions = [...suggestions, ...cheatSuggestions];
+            }
+            
+            // Remove duplicates based on name
+            const uniqueSuggestions = suggestions.filter((suggestion, index, self) => 
+                index === self.findIndex(s => s.name === suggestion.name)
+            );
+            
+            terminalSuggestions = uniqueSuggestions;
+            console.log(`[WebUI Terminal] Loaded ${terminalSuggestions.length} terminal suggestions for autocomplete`);
+            
+        } catch (error) {
+            console.error('Failed to load terminal suggestions:', error);
+        }
+    }
+
+    // Autocomplete variables
+    let currentSuggestionIndex = -1;
+    let currentSuggestions = [];
+    let suggestionElement = null;
+
+    // Create autocomplete suggestion element
+    function createSuggestionElement() {
+        if (suggestionElement) return suggestionElement;
+        
+        suggestionElement = document.createElement('div');
+        suggestionElement.className = 'terminal-suggestions';
+        suggestionElement.style.cssText = `
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: #23263a;
+            border: 1px solid var(--color-border);
+            border-radius: 6px 6px 0 0;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+        `;
+        
+        terminalInput.parentElement.style.position = 'relative';
+        terminalInput.parentElement.appendChild(suggestionElement);
+        return suggestionElement;
+    }
+
+    // Show autocomplete suggestions
+    function showSuggestions(input) {
+        if (!terminalSuggestions.length) return;
+        
+        const filtered = terminalSuggestions.filter(suggestion => 
+            suggestion.name.toLowerCase().includes(input.toLowerCase())
+        ); // Show all matching suggestions
+        
+        if (filtered.length === 0) {
+            hideSuggestions();
+            return;
+        }
+        
+        currentSuggestions = filtered;
+        currentSuggestionIndex = -1;
+        
+        const suggestEl = createSuggestionElement();
+        
+        // Add header with count
+        const headerHtml = `
+            <div style="
+                padding: 6px 12px;
+                background: var(--color-primary);
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                text-align: center;
+                border-bottom: 1px solid var(--color-border);
+            ">
+                ${filtered.length} matching command${filtered.length !== 1 ? 's' : ''}
+            </div>
+        `;
+        
+        const itemsHtml = filtered.map((suggestion, index) => `
+            <div class="terminal-suggestion-item" data-index="${index}" style="
+                padding: 8px 12px;
+                cursor: pointer;
+                color: var(--color-text);
+                border-bottom: 1px solid var(--color-border);
+            ">
+                <strong>${suggestion.name}</strong>
+                ${suggestion.description ? `<br><small style="color: #888;">${suggestion.description}</small>` : ''}
+            </div>
+        `).join('');
+        
+        suggestEl.innerHTML = headerHtml + itemsHtml;
+        
+        // Add click handlers
+        suggestEl.querySelectorAll('.terminal-suggestion-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                selectSuggestion(index);
+            });
+        });
+        
+        suggestEl.style.display = 'block';
+    }
+
+    // Hide autocomplete suggestions
+    function hideSuggestions() {
+        if (suggestionElement) {
+            suggestionElement.style.display = 'none';
+        }
+        currentSuggestions = [];
+        currentSuggestionIndex = -1;
+    }
+
+    // Select a suggestion
+    function selectSuggestion(index) {
+        if (index >= 0 && index < currentSuggestions.length) {
+            terminalInput.value = currentSuggestions[index].name;
+            hideSuggestions();
+            terminalInput.focus();
+        }
+    }
+
+    // Update suggestion selection
+    function updateSuggestionSelection() {
+        if (!suggestionElement || currentSuggestions.length === 0) return;
+        
+        const items = suggestionElement.querySelectorAll('.terminal-suggestion-item');
+        items.forEach((item, index) => {
+            if (index === currentSuggestionIndex) {
+                item.style.background = 'var(--color-primary)';
+                item.style.color = '#fff';
+            } else {
+                item.style.background = 'transparent';
+                item.style.color = 'var(--color-text)';
+            }
+        });
+    }
+
+    // Setup terminal event listeners immediately after elements are found
+    if (terminalInput) {
+        // Input event for autocomplete
+        terminalInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value.length > 0) {
+                showSuggestions(value);
+            } else {
+                hideSuggestions();
+            }
+        });
+
+        // Keydown event for navigation and commands
+        terminalInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (currentSuggestionIndex >= 0) {
+                    // Select current suggestion
+                    selectSuggestion(currentSuggestionIndex);
+                    return;
+                }
+                
+                const command = terminalInput.value;
+                if (command.trim()) {
+                    executeTerminalCommand(command);
+                    terminalInput.value = '';
+                    hideSuggestions();
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentSuggestions.length > 0) {
+                    currentSuggestionIndex = Math.max(0, currentSuggestionIndex - 1);
+                    updateSuggestionSelection();
+                } else if (terminalHistoryIndex > 0) {
+                    terminalHistoryIndex--;
+                    terminalInput.value = terminalHistory[terminalHistoryIndex];
+                    hideSuggestions();
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentSuggestions.length > 0) {
+                    currentSuggestionIndex = Math.min(currentSuggestions.length - 1, currentSuggestionIndex + 1);
+                    updateSuggestionSelection();
+                } else if (terminalHistoryIndex < terminalHistory.length - 1) {
+                    terminalHistoryIndex++;
+                    terminalInput.value = terminalHistory[terminalHistoryIndex];
+                } else {
+                    terminalHistoryIndex = terminalHistory.length;
+                    terminalInput.value = '';
+                }
+                hideSuggestions();
+            } else if (e.key === 'Escape') {
+                hideSuggestions();
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                if (currentSuggestionIndex >= 0) {
+                    selectSuggestion(currentSuggestionIndex);
+                } else if (currentSuggestions.length > 0) {
+                    selectSuggestion(0);
+                }
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!terminalInput.contains(e.target) && !suggestionElement?.contains(e.target)) {
+                hideSuggestions();
+            }
+        });
+
+    } else {
+        console.error('Terminal input element not found!');
+    }
+
+    if (clearTerminalBtn) {
+        clearTerminalBtn.addEventListener('click', () => {
+            clearTerminal();
+        });
+    }
+
+    if (helpTerminalBtn) {
+        helpTerminalBtn.addEventListener('click', () => {
+            executeTerminalCommand('help');
+        });
+    }
+
     // General Elements
     const statusMessageDiv = document.getElementById('status-message');
 
@@ -34,6 +367,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let availableCheatsForSearch = []; // Store all cheats for config search
     let currentFullConfig = null; // Store the fetched config
     let configTabInitialized = false; // Flag to track if config tab has been loaded once
+    let terminalHistory = []; // Store command history
+    let terminalHistoryIndex = -1; // Current position in history
+    let terminalSuggestions = []; // Store autocomplete suggestions
 
     // Function to display status messages
     function showStatus(message, isError = false) {
@@ -882,6 +1218,24 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAndRenderCheats(); // Load cheats immediately (default tab)
     // Config tab content will load when the tab is clicked.
     
+    // Initialize terminal when tab is first opened
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.getAttribute('data-tab') === 'terminal-tab') {
+                // Re-get elements when tab is clicked
+                const currentTerminalOutput = document.getElementById('terminal-output');
+                
+                if (currentTerminalOutput && currentTerminalOutput.children.length === 0) {
+                    console.log('[WebUI Terminal] Initializing terminal interface');
+                    addTerminalLine('Welcome to IdleCI Terminal!', 'info');
+                    addTerminalLine('Type "help" to see available commands, or start typing cheat names.', 'info');
+                    addTerminalLine('Use ↑/↓ arrows to navigate command history.', 'info');
+                    loadTerminalSuggestions();
+                }
+            }
+        });
+    });
+
     // Load version dynamically
     loadVersion();
 });

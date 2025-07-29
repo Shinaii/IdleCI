@@ -735,3 +735,114 @@ html, body {
     padding-right: 2px;
   }
 }
+
+/* Terminal Styles */
+.terminal-container {
+  background: #1a1d23;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.terminal-output {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  background: #1a1d23;
+  color: #e1e5e9;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.terminal-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+  background: #23263a;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+  background: var(--color-primary);
+  border-radius: 4px;
+}
+
+.terminal-input-container {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #23263a;
+  border-top: 1px solid var(--color-border);
+}
+
+.terminal-prompt {
+  color: var(--color-primary);
+  font-weight: bold;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e1e5e9;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 4px 0;
+}
+
+.terminal-input::placeholder {
+  color: #6b7280;
+}
+
+.terminal-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.terminal-control-btn {
+  background: var(--color-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 8px 16px;
+  transition: all var(--transition);
+}
+
+.terminal-control-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.terminal-line {
+  margin-bottom: 4px;
+}
+
+.terminal-command {
+  color: var(--color-primary);
+}
+
+.terminal-success {
+  color: var(--color-success-text);
+}
+
+.terminal-error {
+  color: var(--color-error-text);
+}
+
+.terminal-info {
+  color: var(--color-accent);
+}
