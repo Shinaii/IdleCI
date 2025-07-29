@@ -145,8 +145,37 @@ export async function injectCheats(
   let cheats = await fs.readFile(path.join(process.cwd(), 'cheats.js'), 'utf8');
   logger.debug(`Read cheats.js file, size: ${cheats.length} characters`);
   
-  const configData = `let startupCheats = ${JSON.stringify(startupCheats)};\nlet cheatConfig = ${JSON.stringify(cheatConfig)};\n`;
+  const objToString = (obj: any): string => {
+    let ret = "{";
+    for (let k in obj) {
+      let v = obj[k];
+      if (typeof v === "function") {
+        v = v.toString();
+      } else if (typeof v === 'boolean') {
+        v = v;
+      } else if (Array.isArray(v)) {
+        v = JSON.stringify(v);
+      } else if (typeof v === "object") {
+        //Issue #2 - functions where Native code on Compiling thats why we have to declare it as a fn in default config
+        if (v && v.__isFunction && v.__functionString) {
+          v = v.__functionString;
+        } else {
+          v = objToString(v);
+        }
+      } else {
+        v = `"${v}"`;
+      }
+      ret += `\n  ${k}: ${v},`;
+    }
+    ret += "\n}";
+    return ret;
+  };
+
+  logger.debug('Serializing config...');
+  const configData = `let startupCheats = ${JSON.stringify(startupCheats)};\nlet cheatConfig = ${objToString(cheatConfig)};\n`;
+
   cheats = configData + cheats;
+
   logger.debug(`Prepared cheats script with config data, total size: ${cheats.length} characters`);
   
   logger.debug('Injecting cheats script into page context...');

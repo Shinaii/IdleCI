@@ -13,23 +13,62 @@ import { Express } from 'express';
 import { getLogger } from '../lib/logger';
 
 // Helper functions for config handling
-function objToString(obj: any): string {
-  return JSON.stringify(obj, (key, value) => {
+function objToString(obj: any, indent: number = 0): string {
+  const indentStr = '  '.repeat(indent);
+  const nextIndent = '  '.repeat(indent + 1);
+  
+  const serializeValue = (value: any, currentIndent: number = 0): string => {
     if (typeof value === 'function') {
       return value.toString();
     }
-    return value;
-  }, 2);
+    if (typeof value === 'string' && (value.startsWith('(t) =>') || value.startsWith('(t, args) =>'))) {
+      // This is a function string, don't quote it
+      return value;
+    }
+    if (Array.isArray(value)) {
+      if (value.length === 0) return '[]';
+      const items = value.map(item => serializeValue(item, currentIndent + 1));
+      return '[\n' + nextIndent + items.join(',\n' + nextIndent) + '\n' + indentStr + ']';
+    }
+    if (value && typeof value === 'object') {
+      const pairs = Object.entries(value).map(([key, val]) => {
+        const serializedValue = serializeValue(val, currentIndent + 1);
+        // Check if key is a valid JavaScript identifier
+        const isValidIdentifier = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(key);
+        const keyStr = isValidIdentifier ? key : `"${key}"`;
+        return `${keyStr}: ${serializedValue}`;
+      });
+      if (pairs.length === 0) return '{}';
+      return '{\n' + nextIndent + pairs.join(',\n' + nextIndent) + '\n' + indentStr + '}';
+    }
+    return JSON.stringify(value);
+  };
+  
+  return serializeValue(obj, indent);
 }
 
 function prepareConfigForJson(config: any): any {
-  const serialized = JSON.parse(JSON.stringify(config, (key, value) => {
-    if (typeof value === 'function') {
-      return value.toString();
+  const cleanConfig = (obj: any): any => {
+    if (Array.isArray(obj)) {
+      return obj.map(cleanConfig);
     }
-    return value;
-  }));
-  return serialized;
+    if (obj && typeof obj === 'object') {
+      const cleaned: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        if (value && typeof value === 'object' && 
+            '__isFunction' in value && '__functionString' in value &&
+            (value as any).__isFunction && (value as any).__functionString) {
+          cleaned[key] = (value as any).__functionString;
+        } else {
+          cleaned[key] = cleanConfig(value);
+        }
+      }
+      return cleaned;
+    }
+    return obj;
+  };
+  
+  return cleanConfig(config);
 }
 
 function parseConfigFromJson(config: any): any {
