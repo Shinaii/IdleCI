@@ -80,16 +80,16 @@ export class UpdateChecker {
           break;
       }
 
-      this.logger.debug(`[Updater] Executing command: ${command}`);
+      this.logger.debug(`Executing command: ${command}`);
       
       exec(command, (error, stdout, stderr) => {
         if (error) {
-          this.logger.error(`[Updater] Failed to open browser: ${error.message}`);
-          this.logger.error(`[Updater] stderr: ${stderr}`);
-          this.logger.info(`[Updater] Please manually visit: ${url}`);
+          this.logger.error(`Failed to open browser: ${error.message}`);
+          this.logger.error(`stderr: ${stderr}`);
+          this.logger.info(`Please manually visit: ${url}`);
         } else {
-          this.logger.info(`[Updater] Opened browser to: ${url}`);
-          if (stdout) this.logger.debug(`[Updater] stdout: ${stdout}`);
+          this.logger.info(`Opened browser to: ${url}`);
+          if (stdout) this.logger.debug(`stdout: ${stdout}`);
         }
         resolve();
       });
@@ -98,10 +98,10 @@ export class UpdateChecker {
 
   private async askUserForUpdate(): Promise<boolean> {
     return new Promise(async (resolve) => {
-      this.rl.question('\n[Updater] Do you want to update? (y/n): ', async (answer) => {
+      this.rl.question('\nDo you want to update? (y/n): ', async (answer) => {
         const normalizedAnswer = answer.toLowerCase().trim();
         if (normalizedAnswer === 'y' || normalizedAnswer === 'yes') {
-          this.logger.info('[Updater] Update requested. Opening browser to download page...');
+          this.logger.info('Update requested. Opening browser to download page...');
           try {
             await this.openBrowser('https://github.com/Shinaii/IdleCI/releases');
             // Small delay to ensure browser opens before exit
@@ -109,18 +109,18 @@ export class UpdateChecker {
               resolve(true);
             }, 1000);
           } catch (error) {
-            this.logger.error(`[Updater] Error opening browser: ${error}`);
+            this.logger.error(`Error opening browser: ${error}`);
             resolve(true);
           }
         } else {
-          this.logger.info('[Updater] Update declined. Proceeding with current version...');
+          this.logger.info('Update declined. Proceeding with current version...');
           resolve(false);
         }
       });
     });
   }
 
-  private compareVersions(currentVersion: string, latestVersion: string): boolean {
+    private compareVersions(currentVersion: string, latestVersion: string): { needsUpdate: boolean; currentIsNewer: boolean } {
     const currentClean = currentVersion.split('-')[0];
     const latestClean = latestVersion.split('-')[0];
     
@@ -131,34 +131,44 @@ export class UpdateChecker {
       const currentPart = current[i] || 0;
       const latestPart = latest[i] || 0;
       
-      if (latestPart > currentPart) return true;
-      if (latestPart < currentPart) return false;
-    }
-  
-    if (currentVersion !== latestVersion) {
-      return true;
+      if (latestPart > currentPart) {
+        return { needsUpdate: true, currentIsNewer: false };
+      }
+      if (latestPart < currentPart) {
+        return { needsUpdate: false, currentIsNewer: true };
+      }
     }
     
-    return false; // Versions are truly equal
+    // If base versions are equal, check if the full version strings are different
+    if (currentVersion !== latestVersion) {
+      return { needsUpdate: true, currentIsNewer: false };
+    }
+    
+    return { needsUpdate: false, currentIsNewer: false }; // Versions are truly equal
   }
 
   public async checkForUpdates(currentVersion: string): Promise<boolean> {
-    this.logger.info(`[Updater] Current Version: ${currentVersion}`);
+    this.logger.info(`Current Version: ${currentVersion}`);
     
     const latestVersion = await this.fetchLatestVersion();
     
     if (!latestVersion) {
-      this.logger.warn('[Updater] Could not fetch latest version from GitHub. Proceeding with current version...');
+      this.logger.warn('Could not fetch latest version from GitHub. Proceeding with current version...');
       return false;
     }
 
-    this.logger.info(`[Updater] GitHub Version: ${latestVersion}`);
+    this.logger.info(`GitHub Version: ${latestVersion}`);
     
-    if (this.compareVersions(currentVersion, latestVersion)) {
-      this.logger.info('[Updater] A newer version is available!');
+    const comparison = this.compareVersions(currentVersion, latestVersion);
+    
+    if (comparison.needsUpdate) {
+      this.logger.info('A newer version is available!');
       return await this.askUserForUpdate();
+    } else if (comparison.currentIsNewer) {
+      this.logger.info('You are running a newer version than what is available on GitHub.');
+      return false;
     } else {
-      this.logger.info('[Updater] You are running the latest version.');
+      this.logger.info('You are running the latest version.');
       return false;
     }
   }
