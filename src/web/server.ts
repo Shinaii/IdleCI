@@ -5,6 +5,37 @@ import path from 'path';
 import fs from 'fs';
 import { setupApiRoutes } from './apiRoutes';
 
+// Helper function to read bundled files from pkg
+function readBundledFile(filePath: string): string | null {
+  const logger = getLogger('WebUI');
+  try {
+    // Try multiple possible paths for bundled files
+    const possiblePaths = [
+      path.join(__dirname, 'web', 'ui', filePath),
+      path.join(__dirname, 'ui', filePath),
+      path.join(__dirname, filePath),
+      path.join(process.cwd(), 'dist', 'web', 'ui', filePath),
+      path.join(process.cwd(), 'src', 'web', 'ui', filePath)
+    ];
+    
+    for (const fullPath of possiblePaths) {
+      try {
+        if (fs.existsSync(fullPath)) {
+          return fs.readFileSync(fullPath, 'utf8');
+        }
+      } catch (error) {
+        // Continue to next path
+      }
+    }
+    
+    logger.error(`UI file not found: ${filePath}`);
+    return null;
+  } catch (error) {
+    logger.error(`Error in readBundledFile: ${error}`);
+    return null;
+  }
+}
+
 export class WebServerService {
   private app = express();
   private logger = getLogger('WebUI');
@@ -21,44 +52,8 @@ export class WebServerService {
     this.port = config.customUIPort || 8080;
     this.app.use(express.json());
 
-    // Determine UI path for both development and packaged environments
-    let uiPath: string;
-    
-    // Check if we're in a packaged environment (pkg)
-    if ((process as any).pkg) {
-      // In packaged environment, assets are in the executable
-      uiPath = path.join(process.execPath, '../ui');
-    } else {
-      // In development, use __dirname
-      uiPath = path.join(__dirname, 'ui');
-    }
-    
-    // Fallback: try to find UI files in common locations
-    if (!fs.existsSync(uiPath)) {
-      const possiblePaths = [
-        path.join(__dirname, 'ui'),
-        path.join(process.cwd(), 'dist', 'web', 'ui'),
-        path.join(process.cwd(), 'src', 'web', 'ui'),
-        path.join(process.execPath, '../ui'),
-        path.join(process.execPath, '../../ui')
-      ];
-      
-      for (const testPath of possiblePaths) {
-        if (fs.existsSync(testPath)) {
-          uiPath = testPath;
-          break;
-        }
-      }
-    }
-    
-    this.logger.info(`Using UI path: ${uiPath}`);
-    
-    if (!fs.existsSync(uiPath)) {
-      this.logger.error(`UI directory not found at: ${uiPath}`);
-      throw new Error(`UI directory not found. Tried: ${uiPath}`);
-    }
-
-    this.app.use(express.static(uiPath));
+    // Setup routes for bundled UI files
+    this.setupUIRoutes();
     
     this.app.get('/api/health', (req, res) => {
       res.json({ status: 'ok' });
@@ -74,10 +69,41 @@ export class WebServerService {
         version: this.version
       });
     }
+  }
 
-    // Serve index.html for the root route
+  private setupUIRoutes() {
+    // Serve bundled UI files
     this.app.get('/', (req, res) => {
-      res.sendFile(path.join(uiPath, 'index.html'));
+      const html = readBundledFile('index.html');
+      if (html) {
+        res.setHeader('Content-Type', 'text/html');
+        res.send(html);
+      } else {
+        this.logger.error('UI files not found - index.html');
+        res.status(404).send('UI files not found');
+      }
+    });
+
+    this.app.get('/script.js', (req, res) => {
+      const js = readBundledFile('script.js');
+      if (js) {
+        res.setHeader('Content-Type', 'application/javascript');
+        res.send(js);
+      } else {
+        this.logger.error('UI files not found - script.js');
+        res.status(404).send('Script not found');
+      }
+    });
+
+    this.app.get('/style.css', (req, res) => {
+      const css = readBundledFile('style.css');
+      if (css) {
+        res.setHeader('Content-Type', 'text/css');
+        res.send(css);
+      } else {
+        this.logger.error('UI files not found - style.css');
+        res.status(404).send('Styles not found');
+      }
     });
   }
 

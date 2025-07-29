@@ -5,10 +5,11 @@
     "scripts": {
         "clean": "rimraf dist",
         "build:tsc": "npm run clean && tsc",
-        "copy:ui": "copyfiles -u 1 src/web/ui/**/* dist/web/",
-        "build": "npm run build:tsc && npm run copy:ui",
-        "build:windows": "npm run build && pkg dist/main.js --targets node18-win-x64 --output build/IdleCI-windows-x64",
-        "build:linux": "npm run build && pkg dist/main.js --targets node18-linux-x64 --output build/IdleCI-linux-x64",
+        "copy:ui": "copyfiles -u 3 src/web/ui/**/* dist/web/ui/ && copyfiles package.json dist/",
+        "list-dist": "node -e \"const fs=require('fs');const path=require('path');function listDir(dir,prefix=''){const items=fs.readdirSync(dir);items.forEach(item=>{const fullPath=path.join(dir,item);const stat=fs.statSync(fullPath);if(stat.isDirectory()){console.log(prefix+'📁 '+item+'/');listDir(fullPath,prefix+'  ');}else{console.log(prefix+'📄 '+item+' ('+stat.size+' bytes)');}});}console.log('📂 dist/');listDir('dist');\"",
+        "build": "npm run build:tsc && npm run copy:ui && npm run list-dist",
+        "build:windows": "npm run build && pkg . --targets node18-win-x64 --output build/IdleCI-windows-x64",
+        "build:linux": "npm run build && pkg . --targets node18-linux-x64 --output build/IdleCI-linux-x64",
         "start": "node dist/main.js",
         "dev": "ts-node src/main.ts -d",
         "bun:dev": "bun run src/main.ts -d",
@@ -44,10 +45,9 @@
         "ts-node": "^10.9.1",
         "typescript": "^5.2.2"
     },
+    "bin": "dist/main.js",
     "pkg": {
         "assets": [
-            "cheats.js",
-            "src/config/config.custom.example.js",
             "dist/web/ui/**/*"
         ]
     }
