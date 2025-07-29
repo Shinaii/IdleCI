@@ -6,6 +6,7 @@ import { injectCheats } from './injector/inject';
 import { getLogger } from './lib/logger';
 import { startCliInterface } from './cli';
 import { Command } from 'commander';
+import { UpdateChecker } from './util/updateChecker';
 
 const program = new Command();
 program
@@ -38,6 +39,17 @@ async function main() {
 
     const version = require('../package.json').version;
     printHeader(version);
+
+    // Check for updates
+    logger.info('Checking for updates...');
+    const updateChecker = new UpdateChecker(logLevel);
+    const shouldUpdate = await updateChecker.checkForUpdates(version);
+    updateChecker.close();
+    
+    if (shouldUpdate) {
+      logger.info('Update requested. Exiting program...');
+      process.exit(0);
+    }
 
     logger.info('Loading config...');
     logger.debug(`Loading config from path: ${customConfigPath}`);

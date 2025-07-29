@@ -116,7 +116,7 @@ IdleCI-windows-x64.exe -d -c my-config.js
 
 ### Prerequisites
 
-- **Node.js 20+**
+- **Node.js 18+**
 - **npm** or **bun**
 - **TypeScript** (installed via npm)
 

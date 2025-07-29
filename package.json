@@ -49,6 +49,14 @@
     "pkg": {
         "assets": [
             "dist/web/ui/**/*"
+        ],
+        "targets": [
+            "node18-win-x64",
+            "node18-linux-x64",
+            "node20-win-x64",
+            "node20-linux-x64",
+            "node22-win-x64",
+            "node22-linux-x64"
         ]
     }
 }
