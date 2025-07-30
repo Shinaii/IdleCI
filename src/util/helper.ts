@@ -1,19 +1,78 @@
 import { getLogger } from "../lib/logger";
 
+// Conditional imports for pkg compatibility
+let chalk: any;
+let gradient: any;
+
+try {
+  chalk = require("chalk");
+  gradient = require("gradient-string");
+} catch (error) {
+  // Packages not available, will use fallback
+}
+
+// Clean, embedded ASCII logo - no external dependencies needed!
+function getIdleCILogo(): string[] {
+  return [
+    '    ██╗██████╗ ██╗     ███████╗ ██████╗██╗',
+    '    ██║██╔══██╗██║     ██╔════╝██╔════╝██║',
+    '    ██║██║  ██║██║     █████╗  ██║     ██║',
+    '    ██║██║  ██║██║     ██╔══╝  ██║     ██║',
+    '    ██║██████╔╝███████╗███████╗╚██████╗██║',
+    '    ╚═╝╚═════╝ ╚══════╝╚══════╝ ╚═════╝╚═╝',
+    ''
+  ];
+}
+
 export function printHeader(version: string) {
-    const logo = `\x1b[36m
-    _____    _ _       _____         _____ _                _     _____      _           _             
-   |_   _|  | | |     |  _  |       /  __ \\ |              | |   |_   _|    (_)         | |            
-     | |  __| | | ___ | | | |_ __   | /  \\/ |__   ___  __ _| |_    | | _ __  _  ___  ___| |_ ___  _ __ 
-     | | / _\` | |/ _ \\| | | | '_ \\  | |   | '_ \\ / _ \\/ _\` | __|   | || '_ \\| |/ _ \\/ __| __/ _ \\| '__|
-    _| || (_| | |  __/\\ \\_/ / | | | | \\__/\\ | | |  __/ (_| | |_   _| || | | | |  __/ (__| || (_) | |   
-    \\___/\\__,_|_|\\___| \\___/|_| |_|  \\____/_| |_|\\___|\\__,_|\\__|  \\___/_| |_| |\\___|\\___|\\__\\___/|_|   
-                                                                           _/ |                        
-                                                                          |__/                         
-    \x1b[0m`;
-    console.log(logo);
-    console.log(`      v${version}\n`);
+
+  try {
+    console.log('\n');
+  
+    const logoLines = getIdleCILogo();
+
+    const mainGradient = gradient([
+      { color: '#667eea', pos: 0 },
+      { color: '#764ba2', pos: 0.5 },
+      { color: '#f093fb', pos: 1 }
+    ]);
+    
+    const subtitleGradient = gradient([
+      { color: '#667eea', pos: 0 },
+      { color: '#764ba2', pos: 0.5 },
+      { color: '#f093fb', pos: 1 }
+    ]);
+    
+    const borderGradient = gradient([
+      { color: '#00c6ff', pos: 0 },
+      { color: '#0072ff', pos: 1 }
+    ]);
+    
+    logoLines.forEach((line: string) => {
+      console.log(mainGradient(line));
+    });
+    
+    console.log(subtitleGradient('   🎮 Legends of Idleon Cheat Injector 🚀'));
+    
+    console.log(chalk.gray('   ') + 
+                chalk.bold.cyan(`v${version}`) + 
+                chalk.gray(' | ') + 
+                chalk.yellow.bold('Full WebUI') +
+                chalk.gray(' | ') +
+                chalk.magenta.bold('Reworked in TypeScript'));
+
+    console.log('\n');
+
+    const readyMessage = gradient.rainbow('🚀 Ready to dominate Legends of Idleon! 🚀');
+    console.log(chalk.bold('   ') + readyMessage);
+    
+    console.log('\n');
+    
+    } catch (error) {
+      console.log(error);
   }
+}
+
 
 export async function initializeCheatContext(
   Runtime: any, 

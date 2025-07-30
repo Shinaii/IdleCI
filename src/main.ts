@@ -104,11 +104,9 @@ async function main() {
 
       // CLI interface is integrated into the WebUI Terminal
       if (enableCli) {
-        console.log('💻 CLI Terminal available in WebUI');
         logger.info('CLI Terminal integrated into WebUI');
       } else {
         logger.debug('CLI Terminal disabled');
-        console.log('Injection completed successfully. CLI Terminal is disabled.');
       }
     });
     
