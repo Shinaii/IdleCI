@@ -4,7 +4,6 @@
 [![Build Windows](https://img.shields.io/badge/build-windows-blue?style=for-the-badge&logo=windows)](https://github.com/Shinaii/IdleCI/actions)
 [![Build Linux](https://img.shields.io/badge/build-linux-yellow?style=for-the-badge&logo=linux)](https://github.com/Shinaii/IdleCI/actions)
 [![Downloads](https://img.shields.io/github/downloads/Shinaii/IdleCI/total?style=for-the-badge)](https://github.com/Shinaii/IdleCI/releases)
-[![License](https://img.shields.io/badge/license-GPL--2.0-red?style=for-the-badge)](LICENSE)
 
 ---
 
@@ -155,12 +154,6 @@ IdleCI-windows-x64.exe -d
 
 ---
 
-## 📄 License
-
-This project is licensed under the **GPL-2.0 License**. See [LICENSE](LICENSE) for details.
-
----
-
 ## ⚠️ Disclaimer
 
 **This tool is for educational and personal use only.** Use at your own risk. The authors are not responsible for any bans, data loss, or other consequences resulting from use of this software. **Legends of Idleon** is property of **Lavaflame2**.
@@ -171,7 +164,7 @@ This project is licensed under the **GPL-2.0 License**. See [LICENSE](LICENSE) f
 
 - **iBelg** - Original Developer
 - **Creater0822** and **valleymon** - Contributors
-- **MrJoiny (Disputate)** - Keeping the Project alive
+- **MrJoiny (Disputate)** - Core functionality 
 - **Shinaii** - TypeScript rewrite, full refactor and new WebUI
 
 ---
