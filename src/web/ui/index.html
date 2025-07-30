@@ -3,104 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idleon Cheat Injector UI</title>
+    <title>IdleCI - Advanced Cheat System</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="grid-overlay"></div>
+        <div class="floating-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
     <div class="app-container">
-        <header class="app-header">
-            <div class="header-text">
-                <h1>Idleon Cheat Injector</h1>
-                <p class="subtitle">Web UI for Legends of Idleon cheats</p>
-                <span class="version-badge" id="version-badge">Loading...</span>
+        <!-- Side Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <div class="logo-hexagon">
+                            <span>IC</span>
+                        </div>
+                    </div>
+                    <div class="logo-text">
+                        <h1>IdleCI</h1>
+                        <span class="version-tag" id="version-badge">Loading...</span>
+                    </div>
+                </div>
             </div>
-        </header>
 
-        <main class="main-card">
-            <!-- Tab Buttons -->
-            <nav class="tab-container">
-                <button class="tab-button active" data-tab="cheats-tab">🎮 Cheats</button>
-                <button class="tab-button" data-tab="config-tab">⚙️ Config</button>
-                <button class="tab-button" data-tab="terminal-tab">💻 Terminal</button>
-                <button class="tab-button" data-tab="devtools-tab">🛠️ DevTools</button>
-            </nav>
+            <div class="nav-menu">
+                <button class="nav-item active" data-tab="cheats-tab">
+                    <div class="nav-icon">🎮</div>
+                    <span>Cheats</span>
+                    <div class="nav-indicator"></div>
+                </button>
+                <button class="nav-item" data-tab="config-tab">
+                    <div class="nav-icon">⚙️</div>
+                    <span>Config</span>
+                    <div class="nav-indicator"></div>
+                </button>
+                <button class="nav-item" data-tab="terminal-tab">
+                    <div class="nav-icon">💻</div>
+                    <span>Terminal</span>
+                    <div class="nav-indicator"></div>
+                </button>
+                <button class="nav-item" data-tab="devtools-tab">
+                    <div class="nav-icon">🛠️</div>
+                    <span>DevTools</span>
+                    <div class="nav-indicator"></div>
+                </button>
+            </div>
 
-            <!-- Tab Content -->
-            <section id="tab-content">
-                <!-- Cheats Tab -->
-                <div id="cheats-tab" class="tab-pane active">
-                    <h2>Available Cheats</h2>
-                    <div id="filter-container">
-                        <input type="text" id="filter-input" placeholder="Filter cheats...">
-                    </div>
-                    <div id="cheat-buttons"></div>
-                    <p id="loading-cheats">Loading cheats...</p>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot online"></div>
+                    <span>System Online</span>
                 </div>
+            </div>
+        </nav>
 
-                <!-- Config Tab -->
-                <div id="config-tab" class="tab-pane">
-                    <h2>Configuration</h2>
-                    <div class="config-sub-tab-container">
-                        <button class="config-sub-tab-button active" data-sub-tab="cheatconfig-pane">Cheat Config</button>
-                        <button class="config-sub-tab-button" data-sub-tab="startupcheats-pane">Startup Cheats</button>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="header-bar">
+                <div class="header-left">
+                    <h2 class="page-title" id="page-title">Cheat Management</h2>
+                    <p class="page-subtitle" id="page-subtitle">Execute and manage game modifications</p>
+                </div>
+                <div class="header-right">
+                    <div class="quick-actions">
+                        <button class="action-btn" id="theme-toggle" title="Toggle Theme">
+                            <span>🌙</span>
+                        </button>
+                        <button class="action-btn" id="refresh-btn" title="Refresh Data">
+                            <span>🔄</span>
+                        </button>
+
                     </div>
-                    <div id="config-sub-tab-content">
-                        <div id="cheatconfig-pane" class="config-sub-tab-pane active">
-                            <h3>Cheat Configuration <span class="help-icon" title="Edit advanced cheat options here.">?</span></h3>
-                            <div class="config-category-selector">
-                                <label for="cheatconfig-category-select">Select Category:</label>
-                                <select id="cheatconfig-category-select">
-                                    <option value="all">All</option>
-                                </select>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <!-- Cheats Panel -->
+                <div id="cheats-tab" class="content-panel active">
+                    <div class="panel-header">
+                        <div class="search-container">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="filter-input" placeholder="Search cheats..." class="search-input">
+                                <div class="search-suggestions" id="search-suggestions"></div>
                             </div>
-                            <div id="cheatconfig-options"></div>
-                            <p id="loading-cheatconfig" style="display: none;">Loading CheatConfig...</p>
                         </div>
-                        <div id="startupcheats-pane" class="config-sub-tab-pane">
-                            <h3>Startup Cheats <span class="help-icon" title="Cheats to run automatically on game start.">?</span></h3>
-                            <div id="startupcheats-options"></div>
-                            <p id="loading-startupcheats" style="display: none;">Loading Startup Cheats...</p>
+                        <div class="panel-stats">
+                            <div class="stat-item">
+                                <span class="stat-value" id="total-cheats">0</span>
+                                <span class="stat-label">Available Cheats</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="config-actions">
-                        <button id="update-config-button">Apply Config</button>
-                        <button id="save-config-button">Save Config</button>
+                    
+                    <div class="cheat-grid" id="cheat-buttons">
+                        <div class="loading-state" id="loading-cheats">
+                            <div class="loading-spinner"></div>
+                            <span>Loading cheat modules...</span>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Terminal Tab -->
-                <div id="terminal-tab" class="tab-pane">
-                    <h2>CLI Terminal <span class="help-icon" title="Execute cheat commands directly in the web interface.">?</span></h2>
-                    <div class="terminal-container">
-                        <div id="terminal-output" class="terminal-output"></div>
-                        <div class="terminal-input-container">
-                            <span class="terminal-prompt">idleci> </span>
-                            <input type="text" id="terminal-input" class="terminal-input" placeholder="Type cheat commands here..." autocomplete="off">
+                <!-- Config Panel -->
+                <div id="config-tab" class="content-panel">
+                    <div class="config-layout">
+                        <div class="config-sidebar">
+                            <div class="config-nav">
+                                <button class="config-nav-item active" data-sub-tab="cheatconfig-pane">
+                                    <span class="config-nav-icon">🎯</span>
+                                    <span>Cheat Config</span>
+                                </button>
+                                <button class="config-nav-item" data-sub-tab="startupcheats-pane">
+                                    <span class="config-nav-icon">🚀</span>
+                                    <span>Startup Cheats</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="config-content">
+                            <div id="cheatconfig-pane" class="config-pane active">
+                                <div class="config-header">
+                                    <h3>Cheat Configuration</h3>
+                                    <div class="config-controls">
+                                        <select id="cheatconfig-category-select" class="category-select">
+                                            <option value="all">All Categories</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="config-options-container">
+                                    <div id="cheatconfig-options" class="config-options"></div>
+                                    <div id="loading-cheatconfig" class="loading-state" style="display: none;">
+                                        <div class="loading-spinner"></div>
+                                        <span>Loading configuration...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="startupcheats-pane" class="config-pane">
+                                <div class="config-header">
+                                    <h3>Startup Cheats</h3>
+                                    <p class="config-description">Configure cheats to run automatically when the game starts</p>
+                                </div>
+                                <div class="config-options-container">
+                                    <div id="startupcheats-options" class="config-options"></div>
+                                    <div id="loading-startupcheats" class="loading-state" style="display: none;">
+                                        <div class="loading-spinner"></div>
+                                        <span>Loading startup configuration...</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="terminal-controls">
-                        <button id="clear-terminal" class="terminal-control-btn">Clear</button>
-                        <button id="help-terminal" class="terminal-control-btn">Help</button>
+
+                    <div class="config-info">
+                        <p style="color: var(--text-secondary); font-size: 14px; margin: 20px 0; text-align: center; padding: 16px; background: var(--bg-primary); border-radius: var(--border-radius); border: 1px solid var(--border-primary);">
+                            ✨ Changes are saved automatically when you close the modal
+                        </p>
                     </div>
                 </div>
 
-                <!-- DevTools Tab -->
-                <div id="devtools-tab" class="tab-pane">
-                    <h2>Embedded DevTools <span class="help-icon" title="Advanced: Inspect the game browser context.">?</span></h2>
-                    <iframe id="devtools-iframe" style="width: 100%; height: 600px; border: 1px solid #ccc;"></iframe>
-                    <p id="devtools-message">Loading DevTools URL...</p>
+                <!-- Terminal Panel -->
+                <div id="terminal-tab" class="content-panel">
+                    <div class="terminal-wrapper">
+                        <div class="terminal-header">
+                            <div class="terminal-title">
+                                <span class="terminal-icon">💻</span>
+                                <span>IdleCI Terminal</span>
+                            </div>
+                            <div class="terminal-controls">
+                                <button id="clear-terminal" class="terminal-btn">Clear</button>
+                                <button id="help-terminal" class="terminal-btn">Help</button>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-container">
+                            <div id="terminal-output" class="terminal-output">
+                                <!-- Welcome message will be added dynamically -->
+                            </div>
+                            <div class="terminal-input-line">
+                                <span class="terminal-prompt">
+                                    <span class="prompt-user">user</span>
+                                    <span class="prompt-separator">@</span>
+                                    <span class="prompt-host">idleci</span>
+                                    <span class="prompt-path">~</span>
+                                    <span class="prompt-symbol">$</span>
+                                </span>
+                                <input type="text" id="terminal-input" class="terminal-input" placeholder="Enter command..." autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DevTools Panel -->
+                <div id="devtools-tab" class="content-panel">
+                    <div class="devtools-container">
+                        <div class="devtools-header">
+                            <h3>Developer Tools</h3>
+                            <p class="devtools-description">Advanced inspection and debugging tools</p>
+                        </div>
+                        <div class="devtools-iframe-container">
+                            <iframe id="devtools-iframe" class="devtools-iframe"></iframe>
+                            <div id="devtools-message" class="devtools-message">Initializing DevTools...</div>
+                        </div>
+                    </div>
                 </div>
             </section>
-            <div id="status-message"></div>
-        </main>
 
-        <footer class="app-footer">
-            <span>Made with ❤️ | <a href="https://github.com/Shinaii/IdleCI" target="_blank">GitHub</a></span>
-            <span class="footer-credits">Credits: iBelg, Creater0822, valleymon, Disputate, Shinaii and contributors</span>
-        </footer>
+            <!-- Footer Credits -->
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <div class="footer-center">
+                        Developed with ❤️ by <strong><a href="https://github.com/Shinaii" target="_blank" rel="noopener noreferrer">Shinaii</a></strong>
+                    </div>
+                    <div class="footer-right">
+                        Original Developers: iBelg, Creater0822, valleymon, MrJoiny (Disputate)
+                    </div>
+                </div>
+            </footer>
+        </main>
     </div>
-    <script src="script.js?v=terminal-update"></script>
+
+    <!-- Notification System -->
+    <div class="notification-container" id="notification-container"></div>
+    
+    <!-- Toast Notification Container -->
+            <div class="toast-container" id="toast-container"></div>
+        
+        <!-- Modal container for config editing -->
+        <div id="config-modal-container"></div>
+
+    <script src="script.js?v=redesign-update"></script>
 </body>
 </html>

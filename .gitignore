@@ -1,6 +1,5 @@
 build/
 dist/
 node_modules/
-bun.lockb
-
-
+bun.lock
+config.custom.js
