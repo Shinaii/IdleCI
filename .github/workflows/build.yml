@@ -13,7 +13,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,6 +41,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: npm run build:linux
         
+      - name: Build binary (macOS Intel)
+        if: matrix.os == 'macos-latest'
+        run: npm run build:macos
+        
+      - name: Build binary (macOS ARM64)
+        if: matrix.os == 'macos-latest'
+        run: npm run build:macos-arm64
+        
       - name: Copy cheats and config (Windows)
         if: matrix.os == 'windows-latest'
         run: |
@@ -51,6 +59,14 @@ jobs:
         
       - name: Copy cheats and config (Linux)
         if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir -p build
+          cp cheats.js build/cheats.js
+          cp src/config/config.custom.example.js build/config.custom.example.js
+        shell: bash
+        
+      - name: Copy cheats and config (macOS)
+        if: matrix.os == 'macos-latest'
         run: |
           mkdir -p build
           cp cheats.js build/cheats.js
@@ -89,6 +105,12 @@ jobs:
           name: IdleCI-ubuntu-latest
           path: build/linux
           
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: IdleCI-macos-latest
+          path: build/macos
+          
       - name: Create release packages
         run: |
           # Create Windows package
@@ -101,12 +123,24 @@ jobs:
           zip -r ../../IdleCI-Linux-x64.zip IdleCI-linux-x64 cheats.js config.custom.example.js
           cd ../..
           
+          # Create macOS Intel package
+          cd build/macos
+          zip -r ../../IdleCI-macOS-x64.zip IdleCI-macos-x64 cheats.js config.custom.example.js
+          cd ../..
+          
+          # Create macOS ARM64 package
+          cd build/macos
+          zip -r ../../IdleCI-macOS-arm64.zip IdleCI-macos-arm64 cheats.js config.custom.example.js
+          cd ../..
+          
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
             IdleCI-Windows-x64.zip
             IdleCI-Linux-x64.zip
+            IdleCI-macOS-x64.zip
+            IdleCI-macOS-arm64.zip
           tag_name: ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

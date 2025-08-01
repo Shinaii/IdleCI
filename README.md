@@ -3,6 +3,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/Shinaii/IdleCI?style=for-the-badge)](https://github.com/Shinaii/IdleCI/releases)
 [![Build Windows](https://img.shields.io/badge/build-windows-blue?style=for-the-badge&logo=windows)](https://github.com/Shinaii/IdleCI/actions)
 [![Build Linux](https://img.shields.io/badge/build-linux-yellow?style=for-the-badge&logo=linux)](https://github.com/Shinaii/IdleCI/actions)
+[![Build macOS](https://img.shields.io/badge/build-macos-lightgrey?style=for-the-badge&logo=apple)](https://github.com/Shinaii/IdleCI/actions)
 [![Downloads](https://img.shields.io/github/downloads/Shinaii/IdleCI/total?style=for-the-badge)](https://github.com/Shinaii/IdleCI/releases)
 
 ---
@@ -15,10 +16,10 @@
 
 ## ✨ Features
 
-- 🎯 **Inject cheats into Legends of Idleon** (Steam, Windows/Linux)
+- 🎯 **Inject cheats into Legends of Idleon** (Steam, Windows/Linux/macOS)
 - 🌐 **Web UI** with real-time cheat management and embedded DevTools
 - ⚙️ **Highly configurable**: customize cheats, startup actions, and injector behavior
-- 📦 **Cross-platform builds**: Windows and Linux binaries with all-in-one packages
+- 📦 **Cross-platform builds**: Windows, Linux, and macOS binaries with all-in-one packages
 - 🔒 **Safe config system**: keep your custom settings across updates
 - 🐛 **Debug mode**: detailed logging for troubleshooting
 - 🔄 **Live updates**: modify cheats and config without restarting
@@ -30,10 +31,33 @@
 ### Pre-built Binaries (Recommended)
 
 1. **Download** the latest release for your OS from the [Releases page](https://github.com/Shinaii/IdleCI/releases)
-2. **Extract** the zip file (`IdleCI-Windows-x64.zip` or `IdleCI-Linux-x64.zip`)
+2. **Extract** the zip file:
+   - **Windows:** `IdleCI-Windows-x64.zip`
+   - **Linux:** `IdleCI-Linux-x64.zip`
+   - **macOS (Intel):** `IdleCI-macOS-x64.zip`
+   - **macOS (Apple Silicon):** `IdleCI-macOS-arm64.zip`
 3. **Run** the executable:
    - **Windows:** `IdleCI-windows-x64.exe`
    - **Linux:** `./IdleCI-linux-x64`
+   - **macOS (Intel):** `./IdleCI-macos-x64`
+   - **macOS (Apple Silicon):** `./IdleCI-macos-arm64`
+
+### macOS (Homebrew)
+
+For macOS users, you can install IdleCI using Homebrew:
+
+```bash
+# Install directly from the Formula
+brew install --formula https://raw.githubusercontent.com/Shinaii/IdleCI/main/Formula/idleci.rb
+
+# After installation, run:
+idleci
+```
+
+The Homebrew installation automatically:
+- Creates configuration files at `~/.idleci/`
+- Makes the `idleci` command available system-wide
+- Handles permissions and setup
 
 ### From Source
 
@@ -46,8 +70,11 @@ cd IdleCI
 npm install
 
 # Build for your platform
-npm run build:windows    # Windows
-npm run build:linux      # Linux
+npm run build:all          # All platforms
+npm run build:windows      # Windows
+npm run build:linux        # Linux
+npm run build:macos        # macOS Intel
+npm run build:macos-arm64  # macOS Apple Silicon
 ```
 
 ---
@@ -64,6 +91,15 @@ npm run build:linux      # Linux
    
    # Linux
    ./IdleCI-linux-x64
+   
+   # macOS Intel (binary)
+   ./IdleCI-macos-x64
+   
+   # macOS Apple Silicon (binary)
+   ./IdleCI-macos-arm64
+   
+   # macOS (Homebrew - auto-detects architecture)
+   idleci
    ```
 3. **Access the Web UI** at [http://localhost:8080](http://localhost:8080)
 4. **Configure cheats** through the web interface or edit `config.custom.example.js`
@@ -79,13 +115,25 @@ npm run build:linux      # Linux
 **Examples:**
 ```bash
 # Run with debug mode
-IdleCI-windows-x64.exe -d
+IdleCI-windows-x64.exe -d     # Windows
+./IdleCI-linux-x64 -d        # Linux
+./IdleCI-macos-x64 -d        # macOS Intel
+./IdleCI-macos-arm64 -d      # macOS Apple Silicon
+idleci -d                    # macOS (Homebrew)
 
 # Use custom config
-IdleCI-windows-x64.exe -c my-config.js
+IdleCI-windows-x64.exe -c my-config.js      # Windows
+./IdleCI-linux-x64 -c my-config.js         # Linux
+./IdleCI-macos-x64 -c my-config.js         # macOS Intel
+./IdleCI-macos-arm64 -c my-config.js       # macOS Apple Silicon
+idleci -c ~/.idleci/config.custom.js       # macOS (Homebrew)
 
 # Debug with custom config
-IdleCI-windows-x64.exe -d -c my-config.js
+IdleCI-windows-x64.exe -d -c my-config.js      # Windows
+./IdleCI-linux-x64 -d -c my-config.js         # Linux
+./IdleCI-macos-x64 -d -c my-config.js         # macOS Intel
+./IdleCI-macos-arm64 -d -c my-config.js       # macOS Apple Silicon
+idleci -d -c ~/.idleci/config.custom.js       # macOS (Homebrew)
 ```
 
 ---
@@ -122,14 +170,39 @@ IdleCI-windows-x64.exe -d -c my-config.js
 ### Build Commands
 
 ```bash
+# Build everything at once
+npm run build:all                    # Build for all platforms (sequential, safest)
+npm run build:all:parallel          # Build for all platforms (parallel - faster)
+npm run build:all:parallel:fallback # Fallback if parallel doesn't work
+
 # Platform-specific builds
-npm run build:windows
-npm run build:linux
+npm run build:windows      # Windows
+npm run build:linux        # Linux  
+npm run build:macos        # macOS Intel
+npm run build:macos-arm64  # macOS Apple Silicon
 
 # Development mode
 npm run dev          # TypeScript
 bun run bun:dev      # Bun (faster)
 ```
+
+### Troubleshooting Build Issues
+
+If you encounter build errors:
+
+1. **Install dependencies first**:
+   ```bash
+   npm run install:deps
+   ```
+
+2. **If parallel build fails**, use sequential:
+   ```bash
+   npm run build:all
+   ```
+
+3. **Dynamic require warnings** are normal and can be ignored - they're handled by the pkg configuration.
+
+4. **On Windows**: If you see `'wait' is not recognized`, make sure `npm-run-all` is installed or use the fallback script.
 
 
 ---
@@ -138,7 +211,11 @@ bun run bun:dev      # Bun (faster)
 
 Run with `-d` flag for detailed logging:
 ```bash
-IdleCI-windows-x64.exe -d
+IdleCI-windows-x64.exe -d    # Windows
+./IdleCI-linux-x64 -d       # Linux
+./IdleCI-macos-x64 -d       # macOS Intel
+./IdleCI-macos-arm64 -d     # macOS Apple Silicon
+idleci -d                   # macOS (Homebrew)
 ```
 
 ---

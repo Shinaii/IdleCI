@@ -160,6 +160,57 @@ export async function attachWindows(config: InjectorConfig): Promise<string> {
   }
 }
 
+export async function attachMacOS(config: InjectorConfig): Promise<string> {
+  logger.debug(`Starting macOS auto-attach with config: ${JSON.stringify(config)}`);
+  
+  try {
+    const possibleSteamPaths = [
+      '/Applications/Steam.app/Contents/MacOS/steam_osx',
+      '/Applications/Steam.app/Contents/MacOS/Steam',
+      '/usr/local/bin/steam',
+      `${process.env.HOME}/Applications/Steam.app/Contents/MacOS/steam_osx`,
+      `${process.env.HOME}/Library/Application Support/Steam/steam.sh`,
+    ];
+    let steamCmd = 'steam';
+    let foundSteam = false;
+    
+    logger.debug(`Searching for Steam executable in paths: ${JSON.stringify(possibleSteamPaths)}`);
+    
+    for (const p of possibleSteamPaths) {
+      if (existsSync(p)) {
+        steamCmd = p;
+        foundSteam = true;
+        logger.debug(`Found Steam executable at: ${p}`);
+        break;
+      }
+    }
+    
+    if (!foundSteam) {
+      // Try using Steam URL protocol as fallback (similar to Windows)
+      logger.debug('Steam executable not found, using Steam protocol');
+      const steamUrl = `steam://run/${APP_ID}//--remote-debugging-port=${CDP_PORT}`;
+      logger.debug(`Launching via Steam URL: ${steamUrl}`);
+      spawn('open', [steamUrl], { detached: true, stdio: 'ignore' });
+    } else {
+      // Launch Steam directly with app ID
+      const args = [
+        '-applaunch',
+        APP_ID.toString(),
+        `--remote-debugging-port=${CDP_PORT}`
+      ];
+      logger.debug(`Launching Steam with args: ${JSON.stringify(args)}`);
+      spawn(steamCmd, args, { detached: true, stdio: 'ignore' });
+    }
+    
+    const timeout = config.onTimeout || 15000;
+    logger.debug(`Starting CDP polling with timeout: ${timeout} ms`);
+    return await pollForCDP(timeout, config.pollingInterval);
+  } catch (err) {
+    logger.error(`macOS auto-attach failed: ${err}`);
+    return manualFallback(config.onTimeout || 15000, config.pollingInterval);
+  }
+}
+
 export async function autoAttach(config: InjectorConfig): Promise<string> {
   logger.debug(`Auto-attach called for platform: ${process.platform}`);
   
@@ -167,8 +218,10 @@ export async function autoAttach(config: InjectorConfig): Promise<string> {
     return attachLinux(config);
   } else if (process.platform === 'win32') {
     return attachWindows(config);
+  } else if (process.platform === 'darwin') {
+    return attachMacOS(config);
   } else {
     logger.error(`Unsupported platform for autoAttach: ${process.platform}`);
-    throw new Error('Unsupported platform for autoAttach');
+    throw new Error(`Unsupported platform for autoAttach: ${process.platform}. Supported platforms: Windows (win32), Linux (linux), macOS (darwin)`);
   }
 } 
