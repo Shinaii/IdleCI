@@ -1151,11 +1151,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Filter individual cheat items
                     allCheatButtons.forEach(itemContainer => {
-                        const button = itemContainer.querySelector('.cheat-button');
-                        const buttonText = button.textContent.toLowerCase();
+                        const title = itemContainer.querySelector('.cheat-title');
+                        const description = itemContainer.querySelector('.cheat-description');
+                        const command = itemContainer.querySelector('.cheat-command');
                         const categoryDetails = itemContainer.closest('.cheat-category'); // Find parent category
 
-                        if (buttonText.includes(filterText)) {
+                        // Combine all searchable text
+                        const searchableText = [
+                            title?.textContent || '',
+                            description?.textContent || '',
+                            command?.textContent || ''
+                        ].join(' ').toLowerCase();
+
+                        if (searchableText.includes(filterText)) {
                             itemContainer.style.display = ''; // Show item
                             if (categoryDetails) {
                                 visibleCategories.add(categoryDetails); // Mark category as having visible items
