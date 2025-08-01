@@ -1,6 +1,6 @@
 {
     "name": "idleon-injector-rebuild",
-    "version": "1.1.1-Legacy",
+    "version": "1.1.2-Legacy",
     "main": "dist/main.js",
     "scripts": {
         "clean": "rimraf dist",
